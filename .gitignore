@@ -1,0 +1,10 @@
+# Pycharm
+.idea
+*venv/
+*data
+
+# Byte-compiled
+__pycache__/
+
+.python_packages
+*.zip
