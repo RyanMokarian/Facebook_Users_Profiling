@@ -4,7 +4,17 @@ util = Utils()
 
 
 def run_classifiers():
-    data = util.read_csv('./data/Train/Profile/Profile.csv')[1:]
+    raw_data = util.read_csv('./data/Train/Profile/Profile.csv')[1:]
+    data = []
+    for row in raw_data:
+        try:
+            gender = float(row[3])
+            age = float(row[2])
+            if age >= 0 and (gender == 1 or gender == 0):
+                data.append(row)
+        except ValueError:
+            print("Bad data, skipping record")
+            continue
 
     females = 0
     age_groups = {"xx-24": 0, "25-34": 0, "35-49": 0, "50-xx": 0}
