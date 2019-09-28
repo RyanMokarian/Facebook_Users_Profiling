@@ -1,1 +1,9 @@
-{"age_group": "", "gender": "", "extrovert": "", "neurotic": "", "agreeable": "", "conscientious": "", "open": ""}
+{
+  "age_group": "xx-24",
+  "gender": "female",
+  "extrovert": "2.7",
+  "neurotic": "4.55",
+  "agreeable": "3",
+  "conscientious": "1.9",
+  "open": "2.1"
+}
