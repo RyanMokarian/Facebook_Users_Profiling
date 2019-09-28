@@ -13,6 +13,7 @@ class ResultGenerator:
         profiles = self.utils.read_csv(profiles_path)
         profiles.pop(0)
         model_path = os.path.join("resources", "model.json")
+        model_path = os.path.abspath(model_path)
         model = self.utils.read_json(model_path)
         xml_dictionary = self.generate_xml_from_profiles(profiles, model)
         self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary, )
