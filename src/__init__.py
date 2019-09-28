@@ -10,7 +10,6 @@ def main(test_data="data/Public_Test/Profile/Profile.csv", path_to_results="data
 
 
 if __name__ == "__main__":
-    # test_data = sys.argv[1]
-    # results_path = sys.argv[2]
-    # main(test_data, results_path)
-    main()
+    test_data = sys.argv[1]
+    results_path = sys.argv[2]
+    main(test_data, results_path)
