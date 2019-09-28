@@ -5,7 +5,7 @@ from resultgenerator import ResultGenerator
 
 def main(test_data="data/Public_Test/Profile/Profile.csv", path_to_results="data/results"):
     # TODO Running the model  against the test data and save them in result path
-    ResultGenerator().generate_results()
+    ResultGenerator().generate_results(test_data, path_to_results)
     pass
 
 
