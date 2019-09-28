@@ -31,7 +31,6 @@ class Utils:
         """
         This method writes a python object to a json file
         """
-        print (content)
         with open(path, "w") as text_file:
             print(content, file=text_file)
 

@@ -17,12 +17,5 @@ while getopts ":i:o:" arg; do
 	esac
 done
 
-echo $test_data
-
-echo $results
-
-# shellcheck disable=SC2162
-read -p "Press [Enter] key to start backup..."
-
 # shellcheck disable=SC2086
 python __init__.py $test_data $results
