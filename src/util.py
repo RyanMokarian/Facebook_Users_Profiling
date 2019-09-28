@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 
@@ -10,10 +11,9 @@ class Utils:
         :param filename:
         :return: a json file
         """
-        full_path = os.path.join("resources", filename)
         resources = {}
-        if full_path:
-            with open(full_path, 'r') as file:
+        if filename:
+            with open(filename, 'r') as file:
                 resources = json.load(file)
         return resources
 
@@ -22,9 +22,18 @@ class Utils:
         This method writes a python object to a json file
         """
         self.make_directory_if_not_exists(directory)
-        filename = os.path.join(directory, file_name )
+        filename = os.path.join(directory, file_name)
         with open(filename, 'w') as outfile:
             json.dump(json_object, outfile)
+
+    @staticmethod
+    def write_to_directory(path,content):
+        """
+        This method writes a python object to a json file
+        """
+        print (content)
+        with open(path, "w") as text_file:
+            print(content, file=text_file)
 
     @staticmethod
     def make_directory_if_not_exists(directory):
@@ -34,3 +43,13 @@ class Utils:
         """
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+    @staticmethod
+    def read_csv(filename):
+        """
+        This method reads a CSV file to a list
+        :param filename:
+        :return: a list containing elements per line of CSV
+        """
+        with open(filename, 'r') as a_file:
+            return list(csv.reader(a_file))
