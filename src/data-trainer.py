@@ -4,7 +4,7 @@ util = Utils()
 
 
 def run_classifiers():
-    raw_data = util.read_csv('./data/Train/Profile/Profile.csv')[1:]
+    raw_data = util.read_csv('../data/Train/Profile/Profile.csv')[1:]
     data = []
     for row in raw_data:
         try:
