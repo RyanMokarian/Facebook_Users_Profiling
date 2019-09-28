@@ -22,9 +22,18 @@ class Utils:
         This method writes a python object to a json file
         """
         self.make_directory_if_not_exists(directory)
-        filename = os.path.join(directory, file_name )
+        filename = os.path.join(directory, file_name)
         with open(filename, 'w') as outfile:
             json.dump(json_object, outfile)
+
+    @staticmethod
+    def write_to_directory(path,content):
+        """
+        This method writes a python object to a json file
+        """
+        print (content)
+        with open(path, "w") as text_file:
+            print(content, file=text_file)
 
     @staticmethod
     def make_directory_if_not_exists(directory):
