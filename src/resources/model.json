@@ -1,9 +1,9 @@
 {
   "age_group": "25-34",
   "gender": "male",
-  "extrovert": "2.7",
-  "neurotic": "4.55",
-  "agreeable": "3",
-  "conscientious": "1.9",
-  "open": "2.1"
+  "extrovert": 3.49,
+  "neurotic": 2.73,
+  "agreeable": 3.58,
+  "conscientious": 3.45,
+  "open": 3.91
 }
