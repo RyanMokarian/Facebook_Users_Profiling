@@ -28,11 +28,14 @@ class ResultGenerator:
         xml_dictionary = {}
         for profile in profiles:
             xml = "<user \n id = \"" + profile[1] + "\" " \
-                                                    "\n age_group = \"" + model["age_group"] + "\" \n gender = \"" + \
-                  model["gender"] + "\" \n extrovert = \"" + model["extrovert"] + "\" \n neurotic = \"" + model[
-                      "neurotic"] + "\" \n agreeable = \"" + model["agreeable"] + "\" \n conscientious = \"" + model[
-                      "conscientious"] + "\" \n open = \"" + model[
-                      "open"] + "\" />"
+                                                    "\n age_group = \"" + str(
+                model["age_group"]) + "\" \n gender = \"" + \
+                  str(model["gender"]) + "\" \n extrovert = \"" + str(model["extrovert"]) + "\" \n neurotic = \"" + str(
+                model[
+                    "neurotic"]) + "\" \n agreeable = \"" + str(model["agreeable"]) + "\" \n conscientious = \"" + str(
+                model[
+                    "conscientious"]) + "\" \n open = \"" + str(model[
+                                                                    "open"]) + "\" />"
             xml_dictionary[profile[1]] = xml
 
         return xml_dictionary
