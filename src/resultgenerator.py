@@ -1,5 +1,6 @@
-from util import Utils
 import os
+
+from src.util import Utils
 
 
 class ResultGenerator:
