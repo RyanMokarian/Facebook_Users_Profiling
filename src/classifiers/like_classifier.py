@@ -1,3 +1,5 @@
+import pickle
+
 from src.util import Utils
 import pandas as pd
 import numpy as np
@@ -29,12 +31,14 @@ if __name__ == "__main__":
     df = LikeClassifier().generate_data()
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df)
 
-    clf = SGDClassifier(loss="hinge", penalty="l2", max_iter=10)
+    clf = SGDClassifier(loss="hinge", penalty="l2")
     clf.fit(X_train, y_train)
+    pickle.dump(clf, open("../resources/SGDlikes.sav", 'wb'))
     y_pred = clf.predict(X_test)
     print("SDG acc: ", accuracy_score(y_test, y_pred))
 
     neigh = KNeighborsClassifier(n_neighbors=5)
     neigh.fit(X_train, y_train)
+    pickle.dump(neigh, open("../resources/KNNlikes.sav", 'wb'))
     y_pred = neigh.predict(X_test)
     print("KNN acc: ", accuracy_score(y_test, y_pred))
