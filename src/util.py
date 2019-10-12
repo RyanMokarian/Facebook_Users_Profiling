@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import pandas as pd
 
 
 class Utils:
@@ -27,7 +28,7 @@ class Utils:
             json.dump(json_object, outfile)
 
     @staticmethod
-    def write_to_directory(path,content):
+    def write_to_directory(path, content):
         """
         This method writes a python object to a json file
         """
@@ -52,3 +53,9 @@ class Utils:
         """
         with open(filename, 'r') as a_file:
             return list(csv.reader(a_file))
+
+    @staticmethod
+    def read_data_to_dataframe(path):
+        print("path")
+        print(os.path.abspath(__file__))
+        return pd.read_csv(path)
