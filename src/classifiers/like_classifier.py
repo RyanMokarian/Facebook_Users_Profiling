@@ -4,7 +4,7 @@ from src.util import Utils
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import SGDClassifier, LinearRegression
+from sklearn.linear_model import SGDClassifier, LinearRegression, SGDRegressor
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
@@ -15,7 +15,7 @@ class LikeClassifier:
 
 
     @staticmethod
-    def generate_age_data():
+    def generate_gender_data():
         util = Utils()
         profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
         relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
@@ -37,6 +37,13 @@ class LikeClassifier:
         neu = merged_df.filter(['like_id', 'neu_catg'], axis=1)
         return ope, con, ext, age, neu
 
+    @staticmethod
+    def generate_age_data():
+        util = Utils()
+        profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
+        relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
+        merged_df = pd.merge(relation_df, profile_df, on='userid')
+        return merged_df.filter(['like_id', 'age'], axis=1)
 
     @staticmethod
     def categorical_convertion(merged_df):
@@ -71,9 +78,9 @@ def variable_predictor(df,predicted_variable):
 
 
 if __name__ == "__main__":
-    df_gender = LikeClassifier().generate_age_data()
+    df_gender = LikeClassifier().generate_gender_data()
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df_gender)
-    variable_predictor(df_gender,'gender')
+    variable_predictor(df_gender, 'gender')
 
     df_ope, df_con, df_ext, df_agr, df_neu = LikeClassifier().generate_personality_data()
     variable_predictor(df_ope,'ope')
@@ -81,3 +88,8 @@ if __name__ == "__main__":
     variable_predictor(df_ext,'ext')
     variable_predictor(df_agr,'agr')
     variable_predictor(df_neu,'neu')
+
+    df_age = LikeClassifier().generate_age_data()
+    df_age['age'] = pd.cut(df_age['age'], [0, 25, 35, 50, 200], labels=["xx-24", "25-34", "35-49", "50-xx"],
+                           right=False)
+    variable_predictor(df_age, 'age-group')
