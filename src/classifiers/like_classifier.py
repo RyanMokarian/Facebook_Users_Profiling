@@ -9,14 +9,13 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
-import seaborn as seabornInstance
 
 
 class LikeClassifier:
 
 
     @staticmethod
-    def generate_data():
+    def generate_age_data():
         util = Utils()
         profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
         relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
@@ -64,7 +63,7 @@ class LikeClassifier:
 
 def variable_predictor(df,predicted_variable):
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df)
-    neigh = KNeighborsClassifier(n_neighbors=5)
+    neigh = KNeighborsClassifier(n_neighbors=3)
     neigh.fit(X_train, y_train)
     pickle.dump(neigh, open("../resources/KNNlikes_"+predicted_variable+".sav", 'wb'))
     y_pred = neigh.predict(X_test)
@@ -72,18 +71,10 @@ def variable_predictor(df,predicted_variable):
 
 
 if __name__ == "__main__":
-    df_gender = LikeClassifier().generate_data()
+    df_gender = LikeClassifier().generate_age_data()
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df_gender)
     variable_predictor(df_gender,'gender')
-    #
-    # clf = SGDClassifier(loss="hinge", penalty="l2")
-    # clf.fit(X_train, y_train)
-    # pickle.dump(clf, open("../resources/SGDlikes.sav", 'wb'))
-    # y_pred = clf.predict(X_test)
-    # print("SDG acc: ", accuracy_score(y_test, y_pred))
-    #
 
-    # Prediction of personality traits from "liked" pages
     df_ope, df_con, df_ext, df_agr, df_neu = LikeClassifier().generate_personality_data()
     variable_predictor(df_ope,'ope')
     variable_predictor(df_con,'con')
