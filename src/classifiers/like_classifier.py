@@ -4,19 +4,18 @@ from src.util import Utils
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import SGDClassifier, LinearRegression
+from sklearn.linear_model import SGDClassifier, LinearRegression, SGDRegressor
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
-import seaborn as seabornInstance
 
 
 class LikeClassifier:
 
 
     @staticmethod
-    def generate_data():
+    def generate_gender_data():
         util = Utils()
         profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
         relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
@@ -38,6 +37,13 @@ class LikeClassifier:
         neu = merged_df.filter(['like_id', 'neu_catg'], axis=1)
         return ope, con, ext, age, neu
 
+    @staticmethod
+    def generate_age_data():
+        util = Utils()
+        profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
+        relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
+        merged_df = pd.merge(relation_df, profile_df, on='userid')
+        return merged_df.filter(['like_id', 'age'], axis=1)
 
     @staticmethod
     def categorical_convertion(merged_df):
@@ -64,7 +70,7 @@ class LikeClassifier:
 
 def variable_predictor(df,predicted_variable):
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df)
-    neigh = KNeighborsClassifier(n_neighbors=5)
+    neigh = KNeighborsClassifier(n_neighbors=3)
     neigh.fit(X_train, y_train)
     pickle.dump(neigh, open("../resources/KNNlikes_"+predicted_variable+".sav", 'wb'))
     y_pred = neigh.predict(X_test)
@@ -72,21 +78,18 @@ def variable_predictor(df,predicted_variable):
 
 
 if __name__ == "__main__":
-    df_gender = LikeClassifier().generate_data()
+    df_gender = LikeClassifier().generate_gender_data()
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df_gender)
-    variable_predictor(df_gender,'gender')
-    #
-    # clf = SGDClassifier(loss="hinge", penalty="l2")
-    # clf.fit(X_train, y_train)
-    # pickle.dump(clf, open("../resources/SGDlikes.sav", 'wb'))
-    # y_pred = clf.predict(X_test)
-    # print("SDG acc: ", accuracy_score(y_test, y_pred))
-    #
+    variable_predictor(df_gender, 'gender')
 
-    # Prediction of personality traits from "liked" pages
     df_ope, df_con, df_ext, df_agr, df_neu = LikeClassifier().generate_personality_data()
     variable_predictor(df_ope,'ope')
     variable_predictor(df_con,'con')
     variable_predictor(df_ext,'ext')
     variable_predictor(df_agr,'agr')
     variable_predictor(df_neu,'neu')
+
+    df_age = LikeClassifier().generate_age_data()
+    df_age['age'] = pd.cut(df_age['age'], [0, 25, 35, 50, 200], labels=["xx-24", "25-34", "35-49", "50-xx"],
+                           right=False)
+    variable_predictor(df_age, 'age-group')
