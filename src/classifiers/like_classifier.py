@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 
 class LikeClassifier:
 
-
     @staticmethod
     def generate_gender_data():
         util = Utils()
@@ -21,7 +20,6 @@ class LikeClassifier:
         relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
         merged_df = pd.merge(relation_df, profile_df, on='userid')
         return merged_df.filter(['like_id', 'gender'], axis=1)
-
 
     @staticmethod
     def generate_personality_data():
@@ -68,11 +66,11 @@ class LikeClassifier:
         return X_train, X_test, y_train, y_test
 
 
-def variable_predictor(df,predicted_variable):
+def variable_predictor(df, predicted_variable):
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df)
     neigh = KNeighborsClassifier(n_neighbors=3)
     neigh.fit(X_train, y_train)
-    pickle.dump(neigh, open("../resources/KNNlikes_"+predicted_variable+".sav", 'wb'))
+    pickle.dump(neigh, open("../resources/KNNlikes_" + predicted_variable + ".sav", 'wb'))
     y_pred = neigh.predict(X_test)
     print("KNN acc: ", accuracy_score(y_test, y_pred))
 
@@ -83,11 +81,11 @@ if __name__ == "__main__":
     variable_predictor(df_gender, 'gender')
 
     df_ope, df_con, df_ext, df_agr, df_neu = LikeClassifier().generate_personality_data()
-    variable_predictor(df_ope,'ope')
-    variable_predictor(df_con,'con')
-    variable_predictor(df_ext,'ext')
-    variable_predictor(df_agr,'agr')
-    variable_predictor(df_neu,'neu')
+    variable_predictor(df_ope, 'ope')
+    variable_predictor(df_con, 'con')
+    variable_predictor(df_ext, 'ext')
+    variable_predictor(df_agr, 'agr')
+    variable_predictor(df_neu, 'neu')
 
     df_age = LikeClassifier().generate_age_data()
     df_age['age'] = pd.cut(df_age['age'], [0, 25, 35, 50, 200], labels=["xx-24", "25-34", "35-49", "50-xx"],

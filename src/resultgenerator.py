@@ -1,6 +1,23 @@
 import os
+import pickle
 
 from src.util import Utils
+
+abs_path = os.path.dirname(os.path.abspath(__file__))
+
+
+def compute_predictions_for_age_group(X_test):
+    model_path = os.path.join(abs_path, os.path.join("resources", "KNNlikes_age-group.sav"))
+    loaded_model = pickle.load(open(model_path, 'rb'))
+    y_pred = loaded_model.predict(X_test)
+    pass
+
+
+def compute_gender(test_data, model_path):
+    test_data
+    model = Utils.read_pickle_from_file(model_path)
+    model.predict(iris_X_test)
+    pass
 
 
 class ResultGenerator:
@@ -13,8 +30,10 @@ class ResultGenerator:
         profiles_path = os.path.join(os.path.join(os.path.join(test_data, "Profile")), "Profile.csv")
         profiles = self.utils.read_csv(profiles_path)
         profiles.pop(0)
-        abs_path = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(abs_path, os.path.join("resources", "model.json"))
+        age_group_predictions = compute_predictions_for_age_group(test_data, model_path)
+        age_group_predictions = compute_gender(test_data, model_path)
+
         model = self.utils.read_json(model_path)
         xml_dictionary = self.generate_xml_from_profiles(profiles, model)
         self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary, )
