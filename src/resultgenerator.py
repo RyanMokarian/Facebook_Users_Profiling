@@ -26,12 +26,17 @@ def compute_gender(test_data_path, df_results):
 
     model.predict(merged_df)
     image_df["gender"] = model.predict(merged_df)
-    predicted_df = profile_df["userid"]
-    predicted_df = pd.merge(predicted_df, image_df, on='userid', how="left")
+    predicted_df = profile_df["userid"].to_frame()
+    image_df['userid'] = image_df['userid'].astype('|S')
+    predicted_df = pd.merge(predicted_df, image_df, on="userid", how="left")
     user_gender_df = predicted_df.filter(["userid", "gender"])
     user_gender_df["gender"].fillna(0, inplace=True)
-    pd.merge(df_results, user_gender_df, on='userid')
-    return user_gender_df
+    df_results = pd.merge(df_results, user_gender_df, on='userid',how="left")
+    df_results.drop(['gender_x'], axis=1, inplace=True)
+    df_results.rename(columns={"gender_y": "gender"}, inplace=True)
+    df_results.loc[df_results.gender == 0, 'gender'] = "female"
+    df_results.loc[df_results.gender == 1, 'gender'] = "male"
+    return df_results
 
 
 def generate_df_for_all_users(profiles, model):
@@ -82,33 +87,29 @@ class ResultGenerator:
         df_results = generate_df_for_all_users(profiles, model)
 
         df_results = compute_gender(test_data_path, df_results)
-        df_results = compute_age(test_data_path, df_results)
-        df_results = compute_personality(test_data_path, df_results)
+        # df_results = compute_age(test_data_path, df_results)
+        bbb = compute_personality(test_data_path, df_results)
 
-        xml_dictionary = self.generate_xml_from_profiles(profiles, df_results)
+        xml_dictionary = self.generate_xml_from_profiles(df_results)
         self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary, )
 
     @staticmethod
-    def generate_xml_from_profiles(profiles, data_frame):
+    def generate_xml_from_profiles(data_frame):
         """
       TODO this should be fixed
         """
-        gender_map = {1: "male", 2: "female"}
         xml_dictionary = {}
-        for profile in profiles:
-            xml = "<user \n id = \"" + profile[1] + "\" " \
-                                                    "\n age_group = \"" + str(
-                data_frame["age_group"]) + "\" \n gender = \"" + \
-                  str(gender_map[
-                          data_frame.loc(data_frame['userid'] == profile[1])["gender"]]) + "\" \n extrovert = \"" + str(
-                data_frame["extrovert"]) + "\" \n neurotic = \"" + str(
-                data_frame[
-                    "neurotic"]) + "\" \n agreeable = \"" + str(
-                data_frame["agreeable"]) + "\" \n conscientious = \"" + str(
-                data_frame[
-                    "conscientious"]) + "\" \n open = \"" + str(data_frame[
-                                                                    "open"]) + "\" />"
-            xml_dictionary[profile[1]] = xml
+        for index, row in data_frame.iterrows():
+            xml = "<user \n id = \"" + row["userid"] + "\" " \
+                                                       "\n age_group = \"" + str(
+                row["age"]) + "\" \n gender = \"" + \
+                  str(row["gender"]) + "\" \n extrovert = \"" + str(
+                row["ext"]) + "\" \n neurotic = \"" + str(
+                row["neu"]) + "\" \n agreeable = \"" + str(
+                row["agr"]) + "\" \n conscientious = \"" + str(
+                row[
+                    "con"]) + "\" \n open = \"" + str(row["ope"]) + "\" />"
+            xml_dictionary[row["userid"]] = xml
 
         return xml_dictionary
 
