@@ -55,7 +55,8 @@ def compute_age(test_data_path, df_results):
     merged_df.drop(['userid', 'faceID', 'age'], axis=1, inplace=True)
     model = Utils.read_pickle_from_file(model_path)
     image_df["age_group"] = model.predict(merged_df)
-    predicted_df = profile_df["userid"]
+    predicted_df = profile_df["userid"].to_frame()
+    image_df['userid'] = image_df['userid'].astype('|S')
     predicted_df = pd.merge(predicted_df, image_df, on='userid', how="left")
     user_age_df = predicted_df.filter(["userid", "age_group"])
     user_age_df["age_group"].fillna("xx-24", inplace=True)
