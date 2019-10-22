@@ -8,8 +8,8 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from src.util import Utils
 import pandas as pd
-from sklearn.metrics import accuracy_score
-
+from sklearn.metrics import accuracy_score, hinge_loss
+import numpy as np
 
 class ImageClassifier:
     @staticmethod
@@ -37,30 +37,57 @@ class ImageClassifier:
                 , 'gender'], axis=1)
 
     @staticmethod
+    def get_image_age_training_data():
+        util = Utils()
+        profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
+        profile_df.drop(profile_df.columns.difference(['userid', 'age']), 1, inplace=True)
+        image_df = util.read_data_to_dataframe("../../data/Train/Image/oxford.csv")
+        image_df.rename(columns={'userId': 'userid'}, inplace=True)
+        merged_df = pd.merge(image_df, profile_df, on='userid')
+        merged_df =  merged_df.filter(
+            ['faceRectangle_width', 'faceRectangle_height', 'faceRectangle_left', 'faceRectangle_top',
+             'pupilLeft_x', 'pupilLeft_y', 'pupilRight_x', 'pupilRight_y', 'noseTip_x', 'noseTip_y', 'mouthLeft_x',
+             'mouthLeft_y', 'mouthRight_x', 'mouthRight_y', 'eyebrowLeftOuter_x', 'eyebrowLeftOuter_y',
+             'eyebrowLeftInner_x', 'eyebrowLeftInner_y', 'eyeLeftOuter_x', 'eyeLeftOuter_y', 'eyeLeftTop_x',
+             'eyeLeftTop_y', 'eyeLeftBottom_x', 'eyeLeftBottom_y', 'eyeLeftInner_x', 'eyeLeftInner_y',
+             'eyebrowRightInner_x', 'eyebrowRightInner_y', 'eyebrowRightOuter_x', 'eyebrowRightOuter_y',
+             'eyeRightInner_x', 'eyeRightInner_y', 'eyeRightTop_x', 'eyeRightTop_y', 'eyeRightBottom_x',
+             'eyeRightBottom_y', 'eyeRightOuter_x', 'eyeRightOuter_y', 'noseRootLeft_x', 'noseRootLeft_y',
+             'noseRootRight_x', 'noseRootRight_y', 'noseLeftAlarTop_x', 'noseLeftAlarTop_y', 'noseRightAlarTop_x',
+             'noseRightAlarTop_y', 'noseLeftAlarOutTip_x', 'noseLeftAlarOutTip_y', 'noseRightAlarOutTip_x',
+             'noseRightAlarOutTip_y', 'upperLipTop_x', 'upperLipTop_y', 'upperLipBottom_x', 'upperLipBottom_y',
+             'underLipTop_x', 'underLipTop_y', 'underLipBottom_x', 'underLipBottom_y', 'facialHair_mustache',
+             'facialHair_beard', 'facialHair_sideburns', 'headPose_roll', 'headPose_yaw', 'headPose_pitch'
+                , 'age'], axis=1)
+        merged_df['age'] = pd.cut(merged_df['age'], [0, 25, 35, 50, 200], labels=["xx-24", "25-34", "35-49", "50-xx"],
+                               right=False)
+        return merged_df
+
+    @staticmethod
     def sgd_classify(df_gender):
         X_train, X_test, y_train, y_test = Utils.split_data(df_gender)
-        clf = SGDClassifier(loss="hinge", penalty="l2", max_iter=5)
+        clf = SGDClassifier(loss="hinge", penalty="l2")
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
         print("sgd acc: ", accuracy_score(y_test, y_pred))
 
     @staticmethod
-    def knn_classify(df_gender):
+    def knn_classify(df_gender, predicted_variable):
         X_train, X_test, y_train, y_test = Utils.split_data(df_gender)
-        neigh = KNeighborsClassifier(n_neighbors=3)
+        neigh = KNeighborsClassifier(n_neighbors=18)
         neigh.fit(X_train, y_train)
-        # pickle.dump(neigh, open("../resources/KNNlikes_" + predicted_variable + ".sav", 'wb'))
+        pickle.dump(neigh, open("../resources/KNNimages_" + predicted_variable + ".sav", 'wb'))
         y_pred = neigh.predict(X_test)
         print("KNN acc: ", accuracy_score(y_test, y_pred))
 
     @staticmethod
     def kernel_estimation(df_gender):
         X_train, X_test, y_train, y_test = Utils.split_data(df_gender)
-        rbf_feature = RBFSampler(gamma=1, random_state=1)
+        rbf_feature = RBFSampler()
         X_features = rbf_feature.fit_transform(X_train)
-        clf = SGDClassifier(max_iter=5)
+        clf = SGDClassifier()
         clf.fit(X_features,y_train)
-        print(clf.score(X_features, y_train))
+        print("Kernel Density acc: ", clf.score(X_features, y_train))
 
     @staticmethod
     def svm_estimation(df_gender):
@@ -86,5 +113,11 @@ if __name__ == "__main__":
     # IMAGE_CLASSIFIER.knn_classify(df_gender)
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
     # IMAGE_CLASSIFIER.svm_estimation(df_gender)
-    IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
+    # IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
+    df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
+    IMAGE_CLASSIFIER.sgd_classify(df_age_group)
+    IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
+    IMAGE_CLASSIFIER.kernel_estimation(df_age_group)
+    IMAGE_CLASSIFIER.svm_estimation(df_age_group)
+    IMAGE_CLASSIFIER.random_forest_classifier(df_age_group)
     gooz = ""

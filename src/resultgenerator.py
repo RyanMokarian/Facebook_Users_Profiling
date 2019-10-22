@@ -46,7 +46,21 @@ def generate_df_for_all_users(profiles, model):
 
 
 def compute_age(test_data_path, df_results):
-    pass
+    model_path = os.path.join(abs_path, os.path.join("resources", "KNNimages_age-group.sav"))
+    profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
+    profile_df.drop(profile_df.columns.difference(['userid', 'age']), 1, inplace=True)
+    image_df = Utils.read_data_to_dataframe(test_data_path + "/Image/oxford.csv")
+    image_df.rename(columns={'userId': 'userid'}, inplace=True)
+    merged_df = pd.merge(image_df, profile_df, on='userid')
+    merged_df.drop(['userid', 'faceID', 'age'], axis=1, inplace=True)
+    model = Utils.read_pickle_from_file(model_path)
+    image_df["age_group"] = model.predict(merged_df)
+    predicted_df = profile_df["userid"]
+    predicted_df = pd.merge(predicted_df, image_df, on='userid', how="left")
+    user_age_df = predicted_df.filter(["userid", "age_group"])
+    user_age_df["age_group"].fillna("xx-24", inplace=True)
+    df_results = pd.merge(df_results, user_age_df, on='userid')
+    return df_results
 
 
 def compute_personality(test_data_path, df_results):
