@@ -1,5 +1,6 @@
 import os
 import pickle
+import pandas as pd
 
 from src.util import Utils
 
@@ -13,48 +14,84 @@ def compute_predictions_for_age_group(X_test):
     pass
 
 
-def compute_gender(test_data, model_path):
-    test_data
+def compute_gender(test_data_path, df_results):
+    model_path = os.path.join(abs_path, os.path.join("resources", "RandomForest_Gender.sav"))
+    profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
+    profile_df.drop(profile_df.columns.difference(['userid', 'gender']), 1, inplace=True)
+    image_df = Utils.read_data_to_dataframe(test_data_path + "/Image/oxford.csv")
+    image_df.rename(columns={'userId': 'userid'}, inplace=True)
+    merged_df = pd.merge(image_df, profile_df, on='userid')
+    merged_df.drop(['userid', 'faceID', 'gender'], axis=1, inplace=True)
     model = Utils.read_pickle_from_file(model_path)
-    model.predict(iris_X_test)
+
+    model.predict(merged_df)
+    image_df["gender"] = model.predict(merged_df)
+    predicted_df = profile_df["userid"]
+    predicted_df = pd.merge(predicted_df, image_df, on='userid', how="left")
+    user_gender_df = predicted_df.filter(["userid", "gender"])
+    user_gender_df["gender"].fillna(0, inplace=True)
+    pd.merge(df_results, user_gender_df, on='userid')
+    return user_gender_df
+
+
+def generate_df_for_all_users(profiles, model):
+    profiles["age"] = model['age_group']
+    profiles["gender"] = model['gender']
+    profiles["ope"] = model['open']
+    profiles["con"] = model['conscientious']
+    profiles["ext"] = model['extrovert']
+    profiles["agr"] = model['agreeable']
+    profiles["neu"] = model['neurotic']
+    return profiles
+
+
+def compute_age(test_data_path, df_results):
+    pass
+
+
+def compute_personality(test_data_path, df_results):
     pass
 
 
 class ResultGenerator:
     utils = Utils()
 
-    def generate_results(self, test_data="../data/Public_Test/", path_to_results="../data/results"):
+    def generate_results(self, test_data_path="../data/Public_Test/", path_to_results="../data/results"):
         """
         This method Run the test data against model/s and generated XML files
         """
-        profiles_path = os.path.join(os.path.join(os.path.join(test_data, "Profile")), "Profile.csv")
-        profiles = self.utils.read_csv(profiles_path)
-        profiles.pop(0)
+        profiles_path = os.path.join(os.path.join(os.path.join(test_data_path, "Profile")), "Profile.csv")
+        profiles = pd.read_csv(profiles_path)
         model_path = os.path.join(abs_path, os.path.join("resources", "model.json"))
-        age_group_predictions = compute_predictions_for_age_group(test_data, model_path)
-        age_group_predictions = compute_gender(test_data, model_path)
-
         model = self.utils.read_json(model_path)
-        xml_dictionary = self.generate_xml_from_profiles(profiles, model)
+        df_results = generate_df_for_all_users(profiles, model)
+
+        df_results = compute_gender(test_data_path, df_results)
+        df_results = compute_age(test_data_path, df_results)
+        df_results = compute_personality(test_data_path, df_results)
+
+        xml_dictionary = self.generate_xml_from_profiles(profiles, df_results)
         self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary, )
 
     @staticmethod
-    def generate_xml_from_profiles(profiles, model):
+    def generate_xml_from_profiles(profiles, data_frame):
         """
-        This method iterates through profiles and generates a dictionary of
-        Key: user_id
-        Value: XML element having user attributes
+      TODO this should be fixed
         """
+        gender_map = {1: "male", 2: "female"}
         xml_dictionary = {}
         for profile in profiles:
             xml = "<user \n id = \"" + profile[1] + "\" " \
                                                     "\n age_group = \"" + str(
-                model["age_group"]) + "\" \n gender = \"" + \
-                  str(model["gender"]) + "\" \n extrovert = \"" + str(model["extrovert"]) + "\" \n neurotic = \"" + str(
-                model[
-                    "neurotic"]) + "\" \n agreeable = \"" + str(model["agreeable"]) + "\" \n conscientious = \"" + str(
-                model[
-                    "conscientious"]) + "\" \n open = \"" + str(model[
+                data_frame["age_group"]) + "\" \n gender = \"" + \
+                  str(gender_map[
+                          data_frame.loc(data_frame['userid'] == profile[1])["gender"]]) + "\" \n extrovert = \"" + str(
+                data_frame["extrovert"]) + "\" \n neurotic = \"" + str(
+                data_frame[
+                    "neurotic"]) + "\" \n agreeable = \"" + str(
+                data_frame["agreeable"]) + "\" \n conscientious = \"" + str(
+                data_frame[
+                    "conscientious"]) + "\" \n open = \"" + str(data_frame[
                                                                     "open"]) + "\" />"
             xml_dictionary[profile[1]] = xml
 
@@ -67,3 +104,7 @@ class ResultGenerator:
         self.utils.make_directory_if_not_exists(path_to_results)
         for user in xml_dictionary:
             self.utils.write_to_directory(os.path.join(path_to_results, user + ".xml"), xml_dictionary[user])
+
+
+if __name__ == "__main__":
+    ResultGenerator().generate_results(test_data_path="../data/Public_Test/")
