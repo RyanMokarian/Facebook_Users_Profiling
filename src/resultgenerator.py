@@ -67,7 +67,7 @@ def compute_age(test_data_path, df_results):
     user_age_df["age_group"].fillna("xx-24", inplace=True)
     user_age_df = aggregate_duplicate_ids(user_age_df, 'age_group')
     df_results = pd.merge(df_results, user_age_df, on='userid')
-    return df_results
+    return df_results.drop(columns='age')
 
 
 def compute_personality(test_data_path, df_results):
