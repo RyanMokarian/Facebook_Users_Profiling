@@ -20,6 +20,7 @@ def compute_gender(test_data_path, df_results):
     profile_df.drop(profile_df.columns.difference(['userid', 'gender']), 1, inplace=True)
     image_df = Utils.read_data_to_dataframe(test_data_path + "/Image/oxford.csv")
     image_df.rename(columns={'userId': 'userid'}, inplace=True)
+
     merged_df = pd.merge(image_df, profile_df, on='userid')
     merged_df.drop(['userid', 'faceID', 'gender'], axis=1, inplace=True)
     model = Utils.read_pickle_from_file(model_path)
@@ -27,13 +28,18 @@ def compute_gender(test_data_path, df_results):
     model.predict(merged_df)
     image_df["gender"] = model.predict(merged_df)
     predicted_df = profile_df["userid"].to_frame()
-    image_df['userid'] = image_df['userid'].astype('|S')
+
+    # image_df['userid'] = image_df['userid'].astype('|S')
     predicted_df = pd.merge(predicted_df, image_df, on="userid", how="left")
     user_gender_df = predicted_df.filter(["userid", "gender"])
     user_gender_df["gender"].fillna(0, inplace=True)
+    user_gender_df = aggregate_duplicate_ids(user_gender_df, 'gender')
+
+
     df_results = pd.merge(df_results, user_gender_df, on='userid',how="left")
     df_results.drop(['gender_x'], axis=1, inplace=True)
     df_results.rename(columns={"gender_y": "gender"}, inplace=True)
+
     df_results.loc[df_results.gender == 0, 'gender'] = "female"
     df_results.loc[df_results.gender == 1, 'gender'] = "male"
     return df_results
@@ -71,7 +77,7 @@ def compute_age(test_data_path, df_results):
 
 
 def compute_personality(test_data_path, df_results):
-    pass
+    return df_results
 
 
 def aggregate_duplicate_ids(df, field_name):
@@ -92,8 +98,8 @@ class ResultGenerator:
         df_results = generate_df_for_all_users(profiles, model)
 
         df_results = compute_gender(test_data_path, df_results)
-        # df_results = compute_age(test_data_path, df_results)
-        bbb = compute_personality(test_data_path, df_results)
+        df_results = compute_age(test_data_path, df_results)
+        df_results = compute_personality(test_data_path, df_results)
 
         xml_dictionary = self.generate_xml_from_profiles(df_results)
         self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary, )
@@ -107,7 +113,7 @@ class ResultGenerator:
         for index, row in data_frame.iterrows():
             xml = "<user \n id = \"" + row["userid"] + "\" " \
                                                        "\n age_group = \"" + str(
-                row["age"]) + "\" \n gender = \"" + \
+                row["age_group"]) + "\" \n gender = \"" + \
                   str(row["gender"]) + "\" \n extrovert = \"" + str(
                 row["ext"]) + "\" \n neurotic = \"" + str(
                 row["neu"]) + "\" \n agreeable = \"" + str(
