@@ -112,8 +112,8 @@ class ImageClassifier:
         data = df_gender.to_numpy()
         x = data[:,:-1]
         y = data[:,-1]
-        min_max_scaler = preprocessing.MinMaxScaler()
-        x_scaled = min_max_scaler.fit_transform(x)
+        standard_scaler = preprocessing.StandardScaler()
+        x_scaled = standard_scaler.fit_transform(x)
         df = pd.concat([pd.DataFrame(x_scaled), pd.DataFrame(y)], axis=1)
 
         females = df.loc[df.iloc[:, -1] == 1]
