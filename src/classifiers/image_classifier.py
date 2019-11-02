@@ -1,6 +1,6 @@
 import pickle
 
-from sklearn import svm
+from sklearn import svm, preprocessing
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.kernel_approximation import RBFSampler
 from sklearn.linear_model import SGDClassifier
@@ -10,6 +10,7 @@ from src.util import Utils
 import pandas as pd
 from sklearn.metrics import accuracy_score, hinge_loss
 import numpy as np
+import matplotlib.pyplot as plt
 
 class ImageClassifier:
     @staticmethod
@@ -106,6 +107,23 @@ class ImageClassifier:
         y_pred = clf.predict(X_test)
         print("Random Forest acc: ", accuracy_score(y_test, y_pred))
 
+    @staticmethod
+    def plot_gender_histograms(df_gender):
+        data = df_gender.to_numpy()
+        x = data[:,:-1]
+        y = data[:,-1]
+        min_max_scaler = preprocessing.MinMaxScaler()
+        x_scaled = min_max_scaler.fit_transform(x)
+        df = pd.concat([pd.DataFrame(x_scaled), pd.DataFrame(y)], axis=1)
+
+        females = df.loc[df.iloc[:, -1] == 1]
+        males = df.loc[df.iloc[:, -1] == 0]
+        for i in range(females.shape[1] - 1):
+            plt.hist([females.iloc[:, i], males.iloc[:, i]], color=['orange', 'green'], density=True)
+            plt.legend(['female', 'male'])
+            plt.show()
+
+
 if __name__ == "__main__":
     IMAGE_CLASSIFIER = ImageClassifier()
     df_gender = IMAGE_CLASSIFIER.get_image_gender_training_data()
@@ -120,4 +138,5 @@ if __name__ == "__main__":
     IMAGE_CLASSIFIER.kernel_estimation(df_age_group)
     IMAGE_CLASSIFIER.svm_estimation(df_age_group)
     IMAGE_CLASSIFIER.random_forest_classifier(df_age_group)
+    IMAGE_CLASSIFIER.plot_gender_histograms(df_gender)
     gooz = ""
