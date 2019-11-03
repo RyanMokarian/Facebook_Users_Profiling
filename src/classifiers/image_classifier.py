@@ -124,20 +124,39 @@ class ImageClassifier:
             plt.ylabel(list(df_gender)[i])
             plt.show()
 
+    @staticmethod
+    def plot_age_histograms(df_age):
+        data = df_age.to_numpy()
+        x = data[:,:-1]
+        y = data[:,-1]
+        standard_scaler = preprocessing.StandardScaler()
+        x_scaled = standard_scaler.fit_transform(x)
+        df = pd.concat([pd.DataFrame(x_scaled), pd.DataFrame(y)], axis=1)
+
+        x0_24 = df.loc[df.iloc[:, -1] == "xx-24"]
+        x25_34 = df.loc[df.iloc[:, -1] == "25-34"]
+        x35_49 = df.loc[df.iloc[:, -1] == "35-49"]
+        x50_xx = df.loc[df.iloc[:, -1] == "50-xx"]
+        for i in range(x0_24.shape[1] - 1):
+            plt.hist([x0_24.iloc[:, i], x25_34.iloc[:, i], x35_49.iloc[:, i], x50_xx.iloc[:, i]], color=['orange', 'lime', 'red', 'blue'], density=True)
+            plt.legend(['0_24', '25_34', '35_49', '50_xx'])
+            plt.ylabel(list(df_age)[i])
+            plt.show()
 
 if __name__ == "__main__":
     IMAGE_CLASSIFIER = ImageClassifier()
-    df_gender = IMAGE_CLASSIFIER.get_image_gender_training_data()
+    # df_gender = IMAGE_CLASSIFIER.get_image_gender_training_data()
     # IMAGE_CLASSIFIER.sgd_classify(df_gender)
     # IMAGE_CLASSIFIER.knn_classify(df_gender)
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
     # IMAGE_CLASSIFIER.svm_estimation(df_gender)
     # IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
-    # df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
+    df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
     # IMAGE_CLASSIFIER.sgd_classify(df_age_group)
     # IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
     # IMAGE_CLASSIFIER.kernel_estimation(df_age_group)
     # IMAGE_CLASSIFIER.svm_estimation(df_age_group)
     # IMAGE_CLASSIFIER.random_forest_classifier(df_age_group)
-    IMAGE_CLASSIFIER.plot_gender_histograms(df_gender)
+    # IMAGE_CLASSIFIER.plot_gender_histograms(df_gender)
+    IMAGE_CLASSIFIER.plot_age_histograms(df_age_group)
     # gooz = ""
