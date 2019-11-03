@@ -121,6 +121,7 @@ class ImageClassifier:
         for i in range(females.shape[1] - 1):
             plt.hist([females.iloc[:, i], males.iloc[:, i]], color=['orange', 'green'], density=True)
             plt.legend(['female', 'male'])
+            plt.ylabel(list(df_gender)[i])
             plt.show()
 
 
@@ -132,11 +133,11 @@ if __name__ == "__main__":
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
     # IMAGE_CLASSIFIER.svm_estimation(df_gender)
     # IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
-    df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
-    IMAGE_CLASSIFIER.sgd_classify(df_age_group)
-    IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
-    IMAGE_CLASSIFIER.kernel_estimation(df_age_group)
-    IMAGE_CLASSIFIER.svm_estimation(df_age_group)
-    IMAGE_CLASSIFIER.random_forest_classifier(df_age_group)
+    # df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
+    # IMAGE_CLASSIFIER.sgd_classify(df_age_group)
+    # IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
+    # IMAGE_CLASSIFIER.kernel_estimation(df_age_group)
+    # IMAGE_CLASSIFIER.svm_estimation(df_age_group)
+    # IMAGE_CLASSIFIER.random_forest_classifier(df_age_group)
     IMAGE_CLASSIFIER.plot_gender_histograms(df_gender)
-    gooz = ""
+    # gooz = ""
