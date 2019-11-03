@@ -4,6 +4,7 @@ from sklearn import svm, preprocessing
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.kernel_approximation import RBFSampler
 from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
 from src.util import Utils
@@ -108,6 +109,21 @@ class ImageClassifier:
         print("Random Forest acc: ", accuracy_score(y_test, y_pred))
 
     @staticmethod
+    def random_forest_classifier_kfold_validation(df_gender):
+        data = df_gender.to_numpy()
+        np.random.shuffle(data)
+        X = data[:, :-1]
+        y = data[:, -1]
+        kf = KFold(n_splits=10)
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            clf = RandomForestClassifier(n_estimators=10)
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict(X_test)
+            print("Random Forest acc: ", accuracy_score(y_test, y_pred))
+
+    @staticmethod
     def plot_gender_histograms(df_gender):
         data = df_gender.to_numpy()
         x = data[:,:-1]
@@ -145,7 +161,8 @@ class ImageClassifier:
 
 if __name__ == "__main__":
     IMAGE_CLASSIFIER = ImageClassifier()
-    # df_gender = IMAGE_CLASSIFIER.get_image_gender_training_data()
+    df_gender = IMAGE_CLASSIFIER.get_image_gender_training_data()
+    IMAGE_CLASSIFIER.random_forest_classifier_kfold_validation(df_gender)
     # IMAGE_CLASSIFIER.sgd_classify(df_gender)
     # IMAGE_CLASSIFIER.knn_classify(df_gender)
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
