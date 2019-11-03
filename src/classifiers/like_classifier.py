@@ -68,7 +68,7 @@ class LikeClassifier:
 
 def variable_predictor(df, predicted_variable):
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df)
-    neigh = KNeighborsClassifier(n_neighbors=3)
+    neigh = KNeighborsClassifier(n_neighbors=6)
     neigh.fit(X_train, y_train)
     pickle.dump(neigh, open("../resources/KNNlikes_" + predicted_variable + ".sav", 'wb'))
     y_pred = neigh.predict(X_test)
