@@ -2,7 +2,7 @@ import os
 import pickle
 import pandas as pd
 
-from src.util import Utils
+from util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -40,8 +40,8 @@ def compute_gender(test_data_path, df_results):
     df_results.drop(['gender_x'], axis=1, inplace=True)
     df_results.rename(columns={"gender_y": "gender"}, inplace=True)
 
-    df_results.loc[df_results.gender == 0, 'gender'] = "female"
-    df_results.loc[df_results.gender == 1, 'gender'] = "male"
+    df_results.loc[df_results.gender == 0, 'gender'] = "male"
+    df_results.loc[df_results.gender == 1, 'gender'] = "female"
     return df_results
 
 
