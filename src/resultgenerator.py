@@ -32,7 +32,7 @@ def compute_gender(test_data_path, df_results):
     # image_df['userid'] = image_df['userid'].astype('|S')
     predicted_df = pd.merge(predicted_df, image_df, on="userid", how="left")
     user_gender_df = predicted_df.filter(["userid", "gender"])
-    user_gender_df["gender"].fillna(0, inplace=True)
+    user_gender_df["gender"].fillna(1, inplace=True)
     user_gender_df = aggregate_duplicate_ids(user_gender_df, 'gender')
 
 
