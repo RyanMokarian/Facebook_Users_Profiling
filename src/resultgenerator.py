@@ -2,7 +2,7 @@ import os
 import pickle
 import pandas as pd
 
-from util import Utils
+from src.util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
