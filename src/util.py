@@ -3,7 +3,10 @@ import json
 import os
 import pickle
 
+import numpy as np
 import pandas as pd
+from sklearn.decomposition import FastICA
+from sklearn.feature_selection import RFE
 from sklearn.model_selection import train_test_split
 
 
@@ -75,4 +78,69 @@ class Utils:
     def read_pickle_from_file(file_name):
         with open(file_name, 'rb') as input:
             return pickle.load(input)
+
+    @staticmethod
+    def apply_rfe(df, clf, n_features_to_select):
+        """
+        This method applied recursive feature elimination on a model to
+        select n_features_to_select of the most important features
+        :param df: dataframe [X,y]
+        :param clf: the model
+        :param n_features_to_select:
+        :return: [X,y]
+        """
+        labels_name = list(df.columns.values)[len(list(df.columns.values)) - 1]
+        df_y = df.iloc[:, -1]
+        data = df.to_numpy()
+        np.random.shuffle(data)
+        X = data[:, :-1]
+        y = data[:, -1]
+        selector = RFE(clf, n_features_to_select, step=1)
+        selector = selector.fit(X, y)
+        df = df[df.columns[np.where(selector.ranking_ == 1)[0]]]
+        df[labels_name] = df_y
+        return df
+
+    @staticmethod
+    def apply_fast_ica(df, number_of_components):
+        """
+        This method applied ICA to a data_frame providing the number of components
+        :param df:
+        :param number_of_components:
+        :return:
+        """
+        transformer = FastICA(n_components=number_of_components)
+        labels_name = list(df.columns.values)[len(list(df.columns.values)) - 1]
+        df_y = df.iloc[:, -1]
+        df = df.iloc[:, :-1]
+        # df = df.drop(labels='age', axis=1)
+        data_transformed = transformer.fit_transform(df)
+        data_transformed_df = pd.DataFrame(data_transformed)
+        data_transformed_df[labels_name] = df_y
+        return data_transformed_df
+
+    @staticmethod
+    def remove_column_with_condition(df, condition):
+        """
+        this method removes rows from data frame based on some conditions
+        :param df:
+        :param condition:
+        :return:
+        """
+        df = df[condition]
+        return df
+
+    @staticmethod
+    def normalize_df(df):
+        """
+        this method normalizes a data_frame
+        :param df:
+        :return:
+        """
+        labels_name = list(df.columns.values)[len(list(df.columns.values)) - 1]
+        df_y = df.iloc[:, -1]
+        df = df.iloc[:, :-1]
+        normalized_df = (df - df.mean()) / df.std()
+        normalized_df[labels_name] = df_y
+        return normalized_df
 
