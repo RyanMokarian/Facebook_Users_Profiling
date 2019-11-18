@@ -1,6 +1,7 @@
 import os
 import pickle
 import pandas as pd
+import numpy as np
 
 from classifiers.combined_classifier import CombinedClassifier
 from util import Utils
@@ -84,6 +85,34 @@ def compute_age(test_data_path, df_results):
 
 
 def compute_personality(test_data_path, df_results):
+    model_path = os.path.join(abs_path, os.path.join("resources", "LinearReg_Personality.sav"))
+    profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
+    profile_df.drop(profile_df.columns.difference(['userid', 'ope', 'con', 'ext', 'agr', 'neu']), 1, inplace=True)
+    pers_df = Utils.read_data_to_dataframe(test_data_path + "/Text/nrc.csv")
+    pers_df.rename(columns={'userId': 'userid'}, inplace=True)
+
+    merged_df = pd.merge(pers_df, profile_df, on='userid')
+    merged_df.drop(['userid', 'ope', 'con', 'ext', 'agr', 'neu'], axis=1, inplace=True)
+
+    merged_df = np.log(merged_df + 1)
+    merged_df = (merged_df - merged_df.min()) / (merged_df.max() - merged_df.min())
+
+    model = Utils.read_pickle_from_file(model_path)
+    predictions = model.predict(merged_df)
+
+    pers_df['ope'] = predictions[:,0]
+    pers_df['con'] = predictions[:,1]
+    pers_df['ext'] = predictions[:,2]
+    pers_df['agr'] = predictions[:,3]
+    pers_df['neu'] = predictions[:,4]
+
+    predicted_df = profile_df["userid"].to_frame()
+    predicted_df = pd.merge(predicted_df, pers_df, on="userid", how="left")
+    user_pers_df = predicted_df.filter(['userid', 'ope', 'con', 'ext', 'agr', 'neu'])
+
+    df_results.drop(['ope', 'con', 'ext', 'agr', 'neu'], axis=1, inplace=True)
+    df_results = pd.merge(df_results, user_pers_df, on='userid', how="left")
+
     return df_results
 
 
@@ -125,8 +154,7 @@ class ResultGenerator:
                 row["ext"]) + "\" \n neurotic = \"" + str(
                 row["neu"]) + "\" \n agreeable = \"" + str(
                 row["agr"]) + "\" \n conscientious = \"" + str(
-                row[
-                    "con"]) + "\" \n open = \"" + str(row["ope"]) + "\" />"
+                row["con"]) + "\" \n open = \"" + str(row["ope"]) + "\" />"
             xml_dictionary[row["userid"]] = xml
 
         return xml_dictionary
