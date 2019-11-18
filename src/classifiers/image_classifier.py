@@ -101,12 +101,11 @@ class ImageClassifier:
 
     @staticmethod
     def random_forest_classifier(df_gender):
-        X_train, X_test, y_train, y_test = Utils.split_data(df_gender)
-        clf = RandomForestClassifier(n_estimators=10)
+        X_train = df_gender.iloc[:, :-1]
+        y_train = df_gender.iloc[:, -1]
+        clf = RandomForestClassifier(bootstrap=False, n_estimators=400, max_depth=10, max_features='sqrt')
         clf.fit(X_train, y_train)
         pickle.dump(clf, open("../resources/RandomForest_Gender.sav", 'wb'))
-        y_pred = clf.predict(X_test)
-        print("Random Forest acc: ", accuracy_score(y_test, y_pred))
 
     @staticmethod
     def random_forest_classifier_kfold_validation(df_gender):
@@ -162,12 +161,12 @@ class ImageClassifier:
 if __name__ == "__main__":
     IMAGE_CLASSIFIER = ImageClassifier()
     df_gender = IMAGE_CLASSIFIER.get_image_gender_training_data()
-    IMAGE_CLASSIFIER.random_forest_classifier_kfold_validation(df_gender)
+    # IMAGE_CLASSIFIER.random_forest_classifier_kfold_validation(df_gender)
     # IMAGE_CLASSIFIER.sgd_classify(df_gender)
     # IMAGE_CLASSIFIER.knn_classify(df_gender)
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
     # IMAGE_CLASSIFIER.svm_estimation(df_gender)
-    # IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
+    IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
     df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
     # IMAGE_CLASSIFIER.sgd_classify(df_age_group)
     # IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
@@ -175,5 +174,5 @@ if __name__ == "__main__":
     # IMAGE_CLASSIFIER.svm_estimation(df_age_group)
     # IMAGE_CLASSIFIER.random_forest_classifier(df_age_group)
     # IMAGE_CLASSIFIER.plot_gender_histograms(df_gender)
-    IMAGE_CLASSIFIER.plot_age_histograms(df_age_group)
+    # IMAGE_CLASSIFIER.plot_age_histograms(df_age_group)
     # gavazn! = ""
