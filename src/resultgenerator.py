@@ -2,6 +2,7 @@ import os
 import pickle
 import pandas as pd
 
+from classifiers.combined_classifier import CombinedClassifier
 from util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
@@ -35,8 +36,7 @@ def compute_gender(test_data_path, df_results):
     user_gender_df["gender"].fillna(0, inplace=True)
     user_gender_df = aggregate_duplicate_ids(user_gender_df, 'gender')
 
-
-    df_results = pd.merge(df_results, user_gender_df, on='userid',how="left")
+    df_results = pd.merge(df_results, user_gender_df, on='userid', how="left")
     df_results.drop(['gender_x'], axis=1, inplace=True)
     df_results.rename(columns={"gender_y": "gender"}, inplace=True)
 
@@ -57,13 +57,20 @@ def generate_df_for_all_users(profiles, model):
 
 
 def compute_age(test_data_path, df_results):
-    model_path = os.path.join(abs_path, os.path.join("resources", "KNNimages_age-group.sav"))
+    model_path = os.path.join(abs_path, os.path.join("resources", "LogisticRegressionAge.sav"))
     profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
+
     profile_df.drop(profile_df.columns.difference(['userid', 'age']), 1, inplace=True)
     image_df = Utils.read_data_to_dataframe(test_data_path + "/Image/oxford.csv")
     image_df.rename(columns={'userId': 'userid'}, inplace=True)
-    merged_df = pd.merge(image_df, profile_df, on='userid')
-    merged_df.drop(['userid', 'faceID', 'age'], axis=1, inplace=True)
+
+    combined_classifier = CombinedClassifier()
+    merged_df = combined_classifier.merge_images_piwc(is_train=False,
+                                          profiles_path=test_data_path + "/Profile/Profile.csv",
+                                          liwc_path=test_data_path + "/Text/liwc.csv",
+                                          image_path=test_data_path + "/Image/oxford.csv")
+
+    merged_df.drop(['age_x', 'age_y'], axis=1, inplace=True)
     model = Utils.read_pickle_from_file(model_path)
     image_df["age_group"] = model.predict(merged_df)
 
@@ -81,7 +88,7 @@ def compute_personality(test_data_path, df_results):
 
 
 def aggregate_duplicate_ids(df, field_name):
-    return df.groupby('userid', as_index=False)[field_name].agg(lambda x:x.value_counts().index[0])
+    return df.groupby('userid', as_index=False)[field_name].agg(lambda x: x.value_counts().index[0])
 
 
 class ResultGenerator:
@@ -102,7 +109,7 @@ class ResultGenerator:
         df_results = compute_personality(test_data_path, df_results)
 
         xml_dictionary = self.generate_xml_from_profiles(df_results)
-        self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary, )
+        self.store_individual_xmls_into_results_path(path_to_results, xml_dictionary)
 
     @staticmethod
     def generate_xml_from_profiles(data_frame):
