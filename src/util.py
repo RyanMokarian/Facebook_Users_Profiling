@@ -8,6 +8,10 @@ import pandas as pd
 from sklearn.decomposition import FastICA
 from sklearn.feature_selection import RFE
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+import warnings
+warnings.filterwarnings("ignore")
+
 
 
 class Utils:
@@ -95,8 +99,9 @@ class Utils:
         np.random.shuffle(data)
         X = data[:, :-1]
         y = data[:, -1]
-        selector = RFE(clf, n_features_to_select, step=1)
+        selector = RFE(clf, n_features_to_select, step=1, verbose=1)
         selector = selector.fit(X, y)
+        print("Important  features:" + str(df.columns[np.where(selector.ranking_ == 1)[0]]))
         df = df[df.columns[np.where(selector.ranking_ == 1)[0]]]
         df[labels_name] = df_y
         return df
@@ -113,14 +118,13 @@ class Utils:
         labels_name = list(df.columns.values)[len(list(df.columns.values)) - 1]
         df_y = df.iloc[:, -1]
         df = df.iloc[:, :-1]
-        # df = df.drop(labels='age', axis=1)
         data_transformed = transformer.fit_transform(df)
         data_transformed_df = pd.DataFrame(data_transformed)
         data_transformed_df[labels_name] = df_y
         return data_transformed_df
 
     @staticmethod
-    def remove_column_with_condition(df, condition):
+    def remove_rows_with_condition(df, condition):
         """
         this method removes rows from data frame based on some conditions
         :param df:
@@ -140,7 +144,34 @@ class Utils:
         labels_name = list(df.columns.values)[len(list(df.columns.values)) - 1]
         df_y = df.iloc[:, -1]
         df = df.iloc[:, :-1]
-        normalized_df = (df - df.mean()) / df.std()
+        normalized_df = (df - df.min()) / (df.max() - df.min())
         normalized_df[labels_name] = df_y
         return normalized_df
 
+    @staticmethod
+    def run_exhaustive_search(clf, df, parameter_space):
+        """
+        used the code from:
+        https://datascience.stackexchange.com/questions/36049/
+        how-to-adjust-the-hyperparameters-of-mlp-classifier-to-get-more-perfect-performa
+        :param clf:
+        :param df:
+        :param parameter_space:
+        :return:
+        """
+        X_train, X_test, y_train, y_test = Utils.split_data(df)
+
+        clf = GridSearchCV(clf, parameter_space, n_jobs=-1, cv=3)
+        clf.fit(X_train, y_train)
+
+        print('Best parameters found:\n', clf.best_params_)
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+
+        y_true, y_pred = y_test, clf.predict(X_test)
+
+        from sklearn.metrics import classification_report
+        print('Results on the test set:')
+        print(classification_report(y_true, y_pred))
