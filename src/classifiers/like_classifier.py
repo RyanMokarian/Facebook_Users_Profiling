@@ -1,19 +1,22 @@
 import pickle
 
-from util import Utils
+from src.util import Utils
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import SGDClassifier, LinearRegression, SGDRegressor
+from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
+from sklearn import preprocessing
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 from math import sqrt
+from numpy import array
+from scipy.sparse import csr_matrix
+from collections import defaultdict
+
 
 class LikeClassifier:
 
@@ -25,34 +28,46 @@ class LikeClassifier:
         merged_df = pd.merge(relation_df, profile_df, on='userid')
         return merged_df.filter(['like_id', 'gender'], axis=1)
 
-    # old function for KNN
-    # def generate_personality_data():
-    #     util = Utils()
-    #     profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
-    #     relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
-    #     merged_df = pd.merge(relation_df, profile_df, on='userid')
-        # LikeClassifier.categorical_convertion(merged_df)
-        # ope = merged_df.filter(['like_id', 'ope_catg'], axis=1)
-        # con = merged_df.filter(['like_id', 'con_catg'], axis=1)
-        # ext = merged_df.filter(['like_id', 'ext_catg'], axis=1)
-        # age = merged_df.filter(['like_id', 'agr_catg'], axis=1)
-        # neu = merged_df.filter(['like_id', 'neu_catg'], axis=1)
-        # return ope, con, ext, age, neu
 
     @staticmethod
     def generate_personality_data():
         util = Utils()
         profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
         relation_df = util.read_data_to_dataframe("../../data/Train/Relation/Relation.csv")
-        relation_df = relation_df[:50000]  #
-        # 50k worked but not good results:
-        # (R-squared for Train: 0.53  R-squared for Test: -0.01  RMS =  0.5458165905414707)
-        # 100k didn't work (I got a memory error)
-        relation_df.insert(3, "likes_onehot", [1] * len(relation_df.index), True)
-        relation_df_onehot = pd.pivot(relation_df, index='userid', columns='like_id', values='likes_onehot')
-        relation_df_onehot = relation_df_onehot.fillna(0)  # replace NaN with zeros
-        merged_df = pd.merge(relation_df_onehot, profile_df, on='userid')
+        # I had to uncomment the below line as I got a memory error to read 1,671,354 lines of the Relation.csv file.
+        # relation_df = relation_df[:50000]
+                    # Note: below is an easy way to create a likes feature matrix using pivot libary
+                    # relation_df.insert(3, "likes_onehot", [1] * len(relation_df.index), True)
+                    # relation_df_onehot = pd.pivot(relation_df, index='userid', columns='like_id', values='likes_onehot')
+                    # relation_df_onehot = relation_df_onehot.fillna(0)  # replace NaN with zeros
+        # Creation of a likes feature matrix without using above pivot library:
+        # 1. create a set from likes and a dictionary (keys: users; values: list of likes)
+        user_id_set = relation_df['userid'].unique().tolist()
+        like_id_set = relation_df['like_id'].unique().tolist()
+        user_like_dict = defaultdict(list)
+        for index, rows in relation_df.iterrows():
+            if rows.userid in user_like_dict:
+                user_like_dict[rows.userid].append(like_id_set.index(rows.like_id)) # np.where(like_id_set == rows.like_id)
+            else:
+                user_like_dict[rows.userid] = [like_id_set.index(rows.like_id)] # like_id_set.index(rows.like_id)
+        # up to here I had no memory problem for making a dictionary from the whole data (1,671,354 lines)
+
+        # 2. make a 2d array from the created dictionary
+        n_user_id = len(user_id_set)
+        n_like_id = len(like_id_set)
+        user_like_array = np.zeros([n_user_id, n_like_id], dtype = np.int8) # I got a memory problem for making (25000*536204) matrix
+        for i in range(n_user_id):
+            for j in range(0, n_like_id):
+                if j in user_like_dict[user_id_set[i]]:
+                    user_like_array[i, j] = 1
+        # 3. convert 2d array to df
+        user_like_df = pd.DataFrame(user_like_array)
+        user_like_df.insert(0, "userid", user_id_set, True)
+        merged_df = pd.merge(user_like_df, profile_df, on='userid')
+            #     #In case conversion to a sparse matrix required, the code is:
+                #     merged_df_1 = csr_matrix(np.asarray(merged_df))   and to return it to the original, use .todense()
         return merged_df
+
 
     @staticmethod
     def generate_age_data():
@@ -93,17 +108,21 @@ def variable_predictor(df, predicted_variable):
     y_pred = neigh.predict(X_test)
     print("KNN acc: ", accuracy_score(y_test, y_pred))
 
-def variable_predictor_linreg(df_x, df_y, predicted_variable):
-    df = pd.concat([df_x, df_y], axis=1)
+def variable_predictor_linreg(df, predicted_variable):
     X_train, X_test, y_train, y_test = LikeClassifier.split_data(df)
-    gbrt = GradientBoostingRegressor(n_estimators=100)
-    gbrt.fit(X_train, y_train)
-    pickle.dump(gbrt, open("../resources/LinReglikes_" + predicted_variable + ".sav", 'wb'))
-    y_pred = gbrt.predict(X_test)
-    print("R-squared for Train: %.2f" % gbrt.score(X_train, y_train))
-    print("R-squared for Test: %.2f" % gbrt.score(X_test, y_test))
+    # clf = GradientBoostingRegressor(n_estimators=300)
+    clf = linear_model.Lasso(alpha=0.1)
+    clf.fit(X_train, y_train)
+    # pickle.dump(clf, open("../resources/LinReglikes_" + predicted_variable + ".sav", 'wb'))
+    y_pred = clf.predict(X_test)
+    print('predicted Personality Trait ', predicted_variable, ':\n')
+    print('Slope of the regression line: ', clf.coef_)
+    print('Intercept of the regression line', clf.intercept_)
+    print("R-squared for Train: %.2f" % clf.score(X_train, y_train))
+    print("R-squared for Test: %.2f" % clf.score(X_test, y_test)) # 1 means 100% accurate prediction
     rms = sqrt(mean_squared_error(y_test, y_pred))
-    print('RMS = ', rms)
+    print('RMSE = ', rms)
+    pass
 
 
 if __name__ == "__main__":
@@ -117,20 +136,7 @@ if __name__ == "__main__":
     # variable_predictor(df_age, 'age-group')
 
     # Personality Traits
-    # Previous model which used KNN and used on the Nov 5 presentation
-    # df_ope, df_con, df_ext, df_agr, df_neu = LikeClassifier().generate_personality_data()
-    # variable_predictor(df_ope, 'ope')
-    # variable_predictor(df_con, 'con')
-    # variable_predictor(df_ext, 'ext')
-    # variable_predictor(df_agr, 'agr')
-    # variable_predictor(df_neu, 'neu')
-    #
-    # WIP: will use GradientBoostingRegressor model, likes are quantified by one-hot encoder
-    merged_df_trait = LikeClassifier().generate_personality_data()
-    df_likes = merged_df_trait.iloc[:,1:-8]
-    df_ope = merged_df_trait.iloc[:,-5]
-    variable_predictor_linreg(df_likes, df_ope, 'ope')
-    # variable_predictor_linreg(merged_df_trait['con'], 'con')
-    # variable_predictor_linreg(merged_df_trait['ext'], 'ext')
-    # variable_predictor_linreg(merged_df_trait['agr'], 'agr')
-    # variable_predictor_linreg(merged_df_trait['neu'], 'neu')
+    merged_df = LikeClassifier().generate_personality_data()
+    cols = [0, -8, -7, -6, -5, -4, -2, -1]
+    df_ext = merged_df.drop(merged_df.columns[cols], axis=1) # here df_ext includes all like features and ext column
+    variable_predictor_linreg(df_ext, 'ext')

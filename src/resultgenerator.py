@@ -3,8 +3,8 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from classifiers.combined_classifier import CombinedClassifier
-from util import Utils
+from src.classifiers.combined_classifier import CombinedClassifier
+from src.util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
