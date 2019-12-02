@@ -1,6 +1,6 @@
 import sys
 
-from resultgenerator import ResultGenerator
+from src.resultgenerator import ResultGenerator
 
 
 def main(test_data="data/Public_Test/Profile/Profile.csv", path_to_results="data/results"):

@@ -7,7 +7,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
-from util import Utils
+from src.util import Utils
 import pandas as pd
 from sklearn.metrics import accuracy_score, hinge_loss
 import numpy as np

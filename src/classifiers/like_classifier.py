@@ -1,6 +1,6 @@
 import pickle
 
-from util import Utils
+from src.util import Utils
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
