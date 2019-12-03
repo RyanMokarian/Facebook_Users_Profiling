@@ -3,9 +3,9 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from src.classifiers.combined_classifier import CombinedClassifier
-from src.preprocessors.nrc import read_image
-from src.util import Utils
+from classifiers.combined_classifier import CombinedClassifier
+from preprocessors.nrc import read_image
+from util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -122,8 +122,8 @@ def compute_personality(test_data_path, df_results):
     return df_results
 
 
-def compute_neu(test_data_path, df_results):
-    model_path = os.path.join(abs_path, os.path.join("resources", "MultiTaskLasso_ext.sav"))
+def compute_ext(test_data_path, df_results):
+    model_path = os.path.join(abs_path, os.path.join("resources", "LinearRegression_ext.sav"))
     profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
     profile_df.drop(profile_df.columns.difference(['userid', 'ext']), 1, inplace=True)
     nrc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/nrc.csv")
@@ -154,18 +154,54 @@ def compute_neu(test_data_path, df_results):
     predicted_df = profile_df["userid"].to_frame()
     predicted_df = pd.merge(predicted_df, image_df, on="userid", how="left")
     user_pers_df = predicted_df.filter(['userid', 'ext'])
-    user_pers_df =aggregate_duplicate_ids_average(user_pers_df,"ext")
+    user_pers_df = aggregate_duplicate_ids_average(user_pers_df, "ext")
 
-    # df_results.drop(['neu'], axis=1, inplace=True)
-    # user_pers_df.set_index('userid')
-    # df_results.set_index('userid')
-    # user_pers_df.update(df_results)
     df_results = pd.merge(df_results, user_pers_df, on='userid', how="left")
-
-    df_results.loc[df_results.neu.astype(str).isin(user_pers_df.neu), 'ext'] = user_pers_df.neu
+    df_results["ext"] = np.where(df_results['ext_y'].isnull(), df_results['ext_x'], df_results['ext_y'])
+    df_results.drop(['ext_x', 'ext_y'], axis=1, inplace=True)
 
     return df_results
 
+
+def compute_neu(test_data_path, df_results):
+    model_path = os.path.join(abs_path, os.path.join("resources", "RidgeCV_neu.sav"))
+    profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
+    profile_df.drop(profile_df.columns.difference(['userid', 'neu']), 1, inplace=True)
+    nrc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/nrc.csv")
+    liwc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/liwc.csv")
+    image_df = read_image(profiles_path=test_data_path + "/Profile/Profile.csv",
+                          image_path=test_data_path + "/Image/oxford.csv")
+
+    nrc_df.rename(columns={'userId': 'userid'}, inplace=True)
+    liwc_df.rename(columns={'userId': 'userid'}, inplace=True)
+    image_df.rename(columns={'userId': 'userid'}, inplace=True)
+
+    merged_df = pd.merge(nrc_df, liwc_df, on='userid')
+    merged_df = pd.merge(merged_df, image_df, on='userid')
+    merged_df = pd.merge(merged_df, profile_df, on='userid')
+
+    merged_df.drop(['userid', 'neu'], axis=1, inplace=True)
+
+    merged_df = np.log(merged_df + 1)
+    merged_df = (merged_df - merged_df.min()) / (merged_df.max() - merged_df.min())
+
+    merged_df.fillna(0, inplace=True)
+
+    model = Utils.read_pickle_from_file(model_path)
+    predictions = model.predict(merged_df)
+
+    image_df['neu'] = predictions[:, 0]
+
+    predicted_df = profile_df["userid"].to_frame()
+    predicted_df = pd.merge(predicted_df, image_df, on="userid", how="left")
+    user_pers_df = predicted_df.filter(['userid', 'neu'])
+    user_pers_df = aggregate_duplicate_ids_average(user_pers_df, "neu")
+
+    df_results = pd.merge(df_results, user_pers_df, on='userid', how="left")
+    df_results["neu"] = np.where(df_results['neu_y'].isnull(), df_results['neu_x'], df_results['neu_y'])
+    df_results.drop(['neu_x', 'neu_y'], axis=1, inplace=True)
+
+    return df_results
 
 def aggregate_duplicate_ids(df, field_name):
     return df.groupby('userid', as_index=False)[field_name].agg(lambda x: x.value_counts().index[0])
@@ -191,6 +227,7 @@ class ResultGenerator:
         df_results = compute_gender(test_data_path, df_results)
         df_results = compute_age(test_data_path, df_results)
         df_results = compute_personality(test_data_path, df_results)
+        df_results = compute_ext(test_data_path, df_results)
         df_results = compute_neu(test_data_path, df_results)
 
         xml_dictionary = self.generate_xml_from_profiles(df_results)

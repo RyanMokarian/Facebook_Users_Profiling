@@ -100,7 +100,7 @@ class Utils:
         arr = []
         for train_indices, test_indices in kf.split(df):
             clf.fit(df.iloc[train_indices, :-n_columns], df.iloc[train_indices, -n_columns:])
-            # print(clf.alpha_)
+            print(clf.alpha_)
             pred = clf.predict(df.iloc[test_indices, :-n_columns])
             y_yest = df.iloc[test_indices, -n_columns:].to_numpy()
             if n_columns == 1:
