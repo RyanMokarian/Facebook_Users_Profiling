@@ -59,7 +59,7 @@ def generate_df_for_all_users(profiles, model):
 
 
 def compute_age(test_data_path, df_results):
-    model_path = os.path.join(abs_path, os.path.join("resources", "LogisticRegressionAge.sav"))
+    model_path = os.path.join(abs_path, os.path.join("resources", "LogisticRegressionAge_v2.sav"))
     profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
 
     profile_df.drop(profile_df.columns.difference(['userid', 'age']), 1, inplace=True)
@@ -73,6 +73,26 @@ def compute_age(test_data_path, df_results):
                                                       image_path=test_data_path + "/Image/oxford.csv")
 
     merged_df.drop(['age_x', 'age_y'], axis=1, inplace=True)
+    merged_df = merged_df.filter(
+        ["faceRectangle_left", "faceRectangle_top", "pupilLeft_x", "pupilLeft_y", "pupilRight_x", "pupilRight_y",
+         "noseTip_x", "noseTip_y", "mouthLeft_x", "mouthLeft_y", "mouthRight_x", "mouthRight_y", "eyebrowLeftOuter_x",
+         "eyebrowLeftOuter_y", "eyebrowLeftInner_x", "eyebrowLeftInner_y", "eyeLeftOuter_x", "eyeLeftOuter_y",
+         "eyeLeftTop_y", "eyeLeftBottom_x", "eyeLeftBottom_y", "eyeLeftInner_x", "eyeLeftInner_y",
+         "eyebrowRightInner_x", "eyebrowRightInner_y", "eyebrowRightOuter_x", "eyebrowRightOuter_y", "eyeRightInner_x",
+         "eyeRightInner_y", "eyeRightTop_x", "eyeRightTop_y", "eyeRightBottom_x", "eyeRightBottom_y", "eyeRightOuter_x",
+         "eyeRightOuter_y", "noseRootLeft_x", "noseRootLeft_y", "noseRootRight_y", "noseLeftAlarTop_x",
+         "noseLeftAlarTop_y", "noseRightAlarTop_x", "noseRightAlarTop_y", "noseLeftAlarOutTip_x",
+         "noseLeftAlarOutTip_y", "noseRightAlarOutTip_x", "noseRightAlarOutTip_y", "upperLipTop_x", "upperLipTop_y",
+         "upperLipBottom_x", "upperLipBottom_y", "underLipTop_x", "underLipTop_y", "underLipBottom_x",
+         "underLipBottom_y", "facialHair_mustache", "facialHair_beard", "facialHair_sideburns", "Sixltr", "Dic",
+         "Numerals", "funct", "pronoun", "ppron", "i", "we", "shehe", "they", "article", "verb", "auxverb", "past",
+         "present", "future", "adverb", "preps", "conj", "negate", "quant", "number", "swear", "social", "family",
+         "friend", "humans", "affect", "posemo", "negemo", "anx", "anger", "sad", "cogmech", "insight", "cause",
+         "discrep", "tentat", "certain", "inhib", "incl", "excl", "percept", "see", "hear", "feel", "bio", "body",
+         "health", "sexual", "ingest", "work", "achieve", "leisure", "home", "money", "relig", "death", "assent",
+         "nonfl", "filler", "Period", "Comma", "Colon", "SemiC", "QMark", "Exclam", "Dash", "Quote", "Apostro",
+         "Parenth", "OtherP", "AllPct"], axis=1)
+
     model = Utils.read_pickle_from_file(model_path)
     image_df["age_group"] = model.predict(merged_df)
 
