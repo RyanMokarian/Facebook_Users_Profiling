@@ -8,7 +8,7 @@ from sklearn.model_selection import cross_val_score
 import warnings
 
 
-from src.util import Utils
+from util import Utils
 
 warnings.filterwarnings("ignore")
 

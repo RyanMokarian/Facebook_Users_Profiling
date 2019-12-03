@@ -37,7 +37,7 @@ import numpy as np
 import pandas as pd
 from sklearn import linear_model
 
-from src.util import Utils
+from util import Utils
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)

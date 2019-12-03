@@ -3,9 +3,9 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from src.classifiers.combined_classifier import CombinedClassifier
-from src.preprocessors.nrc import read_image
-from src.util import Utils
+from classifiers.combined_classifier import CombinedClassifier
+from preprocessors.nrc import read_image
+from util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
