@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import FastICA
 from sklearn.feature_selection import RFE
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.model_selection import GridSearchCV
 import warnings
-warnings.filterwarnings("ignore")
 
+warnings.filterwarnings("ignore")
 
 
 class Utils:
@@ -79,12 +79,48 @@ class Utils:
         return X_train, X_test, y_train, y_test
 
     @staticmethod
+    def split_data_n_columns(df, n_columns):
+        data = df.to_numpy()
+        X = data[:, :n_columns]
+        y = data[:, n_columns]
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+        return X_train, X_test, y_train, y_test
+
+    @staticmethod
+    def perform_cross_validation(clf, df, n_columns=1):
+        """
+        This method is used to do  the cross validation
+        :param clf:
+        :param df:
+        :return:
+        """
+
+        kf = KFold(n_splits=10)
+        arr = []
+        for train_indices, test_indices in kf.split(df):
+            clf.fit(df.iloc[train_indices, :-n_columns], df.iloc[train_indices, -n_columns:])
+            print(clf.alpha_)
+            pred = clf.predict(df.iloc[test_indices, :-n_columns])
+            y_yest = df.iloc[test_indices, -n_columns:].to_numpy()
+            if n_columns == 1:
+                arr.append(np.average(np.sqrt(np.average((y_yest - pred) ** 2))))
+            else:
+                arr.append(np.sqrt(np.average((y_yest - pred) ** 2, axis=0)))
+        print("cross validation: " + str(np.average(arr)))
+
+    @staticmethod
     def read_pickle_from_file(file_name):
         with open(file_name, 'rb') as input:
             return pickle.load(input)
 
     @staticmethod
-    def apply_rfe(df, clf, n_features_to_select):
+    def write_object_to_file(obj, file_name):
+        with open(file_name, 'wb') as output:
+            pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def apply_rfe(df, clf, n_features_to_select, n_labels):
         """
         This method applied recursive feature elimination on a model to
         select n_features_to_select of the most important features
@@ -97,8 +133,8 @@ class Utils:
         df_y = df.iloc[:, -1]
         data = df.to_numpy()
         np.random.shuffle(data)
-        X = data[:, :-1]
-        y = data[:, -1]
+        X = data[:, :-n_labels]
+        y = data[:, -n_labels]
         selector = RFE(clf, n_features_to_select, step=1, verbose=1)
         selector = selector.fit(X, y)
         print("Important  features:" + str(df.columns[np.where(selector.ranking_ == 1)[0]]))
@@ -107,7 +143,7 @@ class Utils:
         return df
 
     @staticmethod
-    def apply_fast_ica(df, number_of_components):
+    def apply_fast_ica(df, number_of_components, number_of_lables):
         """
         This method applied ICA to a data_frame providing the number of components
         :param df:
@@ -116,8 +152,8 @@ class Utils:
         """
         transformer = FastICA(n_components=number_of_components)
         labels_name = list(df.columns.values)[len(list(df.columns.values)) - 1]
-        df_y = df.iloc[:, -1]
-        df = df.iloc[:, :-1]
+        df_y = df.iloc[:, -number_of_lables]
+        df = df.iloc[:, :-number_of_lables]
         data_transformed = transformer.fit_transform(df)
         data_transformed_df = pd.DataFrame(data_transformed)
         data_transformed_df[labels_name] = df_y
@@ -149,7 +185,7 @@ class Utils:
         return normalized_df
 
     @staticmethod
-    def run_exhaustive_search(clf, df, parameter_space):
+    def run_exhaustive_search(clf, df, columns, parameter_space):
         """
         used the code from:
         https://datascience.stackexchange.com/questions/36049/
@@ -159,7 +195,7 @@ class Utils:
         :param parameter_space:
         :return:
         """
-        X_train, X_test, y_train, y_test = Utils.split_data(df)
+        X_train, X_test, y_train, y_test = Utils.split_data_n_columns(df, columns)
 
         clf = GridSearchCV(clf, parameter_space, n_jobs=-1, cv=3)
         clf.fit(X_train, y_train)
