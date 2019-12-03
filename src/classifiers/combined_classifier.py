@@ -112,21 +112,26 @@ class CombinedClassifier:
 
     @staticmethod
     def predict_age_using_logistic_regression(df):
+        df_age=df["ages"]
+        df =df.filter(["faceRectangle_left", "faceRectangle_top", "pupilLeft_x", "pupilLeft_y", "pupilRight_x", "pupilRight_y", "noseTip_x", "noseTip_y", "mouthLeft_x", "mouthLeft_y", "mouthRight_x", "mouthRight_y", "eyebrowLeftOuter_x", "eyebrowLeftOuter_y", "eyebrowLeftInner_x", "eyebrowLeftInner_y", "eyeLeftOuter_x", "eyeLeftOuter_y", "eyeLeftTop_y", "eyeLeftBottom_x", "eyeLeftBottom_y", "eyeLeftInner_x", "eyeLeftInner_y", "eyebrowRightInner_x", "eyebrowRightInner_y", "eyebrowRightOuter_x", "eyebrowRightOuter_y", "eyeRightInner_x", "eyeRightInner_y", "eyeRightTop_x", "eyeRightTop_y", "eyeRightBottom_x", "eyeRightBottom_y", "eyeRightOuter_x", "eyeRightOuter_y", "noseRootLeft_x", "noseRootLeft_y", "noseRootRight_y", "noseLeftAlarTop_x", "noseLeftAlarTop_y", "noseRightAlarTop_x", "noseRightAlarTop_y", "noseLeftAlarOutTip_x", "noseLeftAlarOutTip_y", "noseRightAlarOutTip_x", "noseRightAlarOutTip_y", "upperLipTop_x", "upperLipTop_y", "upperLipBottom_x", "upperLipBottom_y", "underLipTop_x", "underLipTop_y", "underLipBottom_x", "underLipBottom_y", "facialHair_mustache", "facialHair_beard", "facialHair_sideburns", "Sixltr", "Dic", "Numerals", "funct", "pronoun", "ppron", "i", "we", "shehe", "they", "article", "verb", "auxverb", "past", "present", "future", "adverb", "preps", "conj", "negate", "quant", "number", "swear", "social", "family", "friend", "humans", "affect", "posemo", "negemo", "anx", "anger", "sad", "cogmech", "insight", "cause", "discrep", "tentat", "certain", "inhib", "incl", "excl", "percept", "see", "hear", "feel", "bio", "body", "health", "sexual", "ingest", "work", "achieve", "leisure", "home", "money", "relig", "death", "assent", "nonfl", "filler", "Period", "Comma", "Colon", "SemiC", "QMark", "Exclam", "Dash", "Quote", "Apostro", "Parenth", "OtherP", "AllPct"],axis=1)
+        df["age"]=df_age
         data = df.to_numpy()
         X = data[:, :-1]
         y = data[:, -1]
         clf = LogisticRegression(C=0.004832930238571752,
                                  penalty='l2')
         clf.fit(X, y)
-        pickle.dump(clf, open("../resources/LogisticRegressionAge.sav", 'wb'))
+        pickle.dump(clf, open("../resources/LogisticRegressionAge_v2.sav", 'wb'))
 
     def fit_model_using_default_ica_rfe(self, clf, df):
-        print("model with all features")
-        self.run_classifier_for_accuracy(df, clf)
-        df_ica = UTILS.apply_fast_ica(df, 10)
-        print("model with 10 features ica applied")
-        self.run_classifier_for_accuracy(df_ica, clf)
-        df_rfe = UTILS.apply_rfe(df, clf, 10)
+        # print("model with all features")
+        # self.run_classifier_for_accuracy(df, clf)
+        # df_ica = UTILS.apply_fast_ica(df, 10,1)
+        # print("model with 10 features ica applied")
+        # self.run_classifier_for_accuracy(df_ica, clf)
+        # for i in range(124,129):
+
+        df_rfe = UTILS.apply_rfe(df, clf, 130,1)
         print("model with 10 features rfe applied")
         self.run_classifier_for_accuracy(df_rfe, clf)
 
@@ -137,4 +142,5 @@ if __name__ == "__main__":
                              penalty='l2')
     CC = CombinedClassifier()
     df = CC.merge_images_piwc()
-    CC.fit_model_using_default_ica_rfe(clf, df)
+    # CC.fit_model_using_default_ica_rfe(clf, df)
+    CC.predict_age_using_logistic_regression(df)
