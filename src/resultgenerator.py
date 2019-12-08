@@ -143,23 +143,24 @@ def compute_personality(test_data_path, df_results):
 
 
 def compute_ext(test_data_path, df_results):
-    model_path = os.path.join(abs_path, os.path.join("resources", "LinearRegression_ext.sav"))
+    model_path = os.path.join(abs_path, os.path.join("resources", "LinearRegression_ext_v2.sav"))
     profile_df = Utils.read_data_to_dataframe(test_data_path + "/Profile/Profile.csv")
     profile_df.drop(profile_df.columns.difference(['userid', 'ext']), 1, inplace=True)
     nrc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/nrc.csv")
     liwc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/liwc.csv")
-    image_df = read_image(profiles_path=test_data_path + "/Profile/Profile.csv",
-                          image_path=test_data_path + "/Image/oxford.csv")
+
 
     nrc_df.rename(columns={'userId': 'userid'}, inplace=True)
     liwc_df.rename(columns={'userId': 'userid'}, inplace=True)
-    image_df.rename(columns={'userId': 'userid'}, inplace=True)
 
     merged_df = pd.merge(nrc_df, liwc_df, on='userid')
-    merged_df = pd.merge(merged_df, image_df, on='userid')
     merged_df = pd.merge(merged_df, profile_df, on='userid')
-
     merged_df.drop(['userid', 'ext'], axis=1, inplace=True)
+    merged_df = merged_df.filter(
+        ['positive', 'negative', 'anger_x', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust',
+         'pronoun', 'ppron', 'i', 'we', 'you', 'shehe', 'they', 'ipron', 'future', 'affect', 'posemo', 'negemo', 'anx',
+         'incl', 'work', 'death', 'assent', 'nonfl', 'Quote', 'Apostro', 'ext'], axis=1)
+
 
     merged_df = np.log(merged_df + 1)
     merged_df = (merged_df - merged_df.min()) / (merged_df.max() - merged_df.min())
@@ -169,12 +170,11 @@ def compute_ext(test_data_path, df_results):
     model = Utils.read_pickle_from_file(model_path)
     predictions = model.predict(merged_df)
 
-    image_df['ext'] = predictions[:, 0]
+    nrc_df['ext'] = predictions[:, 0]
 
     predicted_df = profile_df["userid"].to_frame()
-    predicted_df = pd.merge(predicted_df, image_df, on="userid", how="left")
+    predicted_df = pd.merge(predicted_df, nrc_df, on="userid", how="left")
     user_pers_df = predicted_df.filter(['userid', 'ext'])
-    user_pers_df = aggregate_duplicate_ids_average(user_pers_df, "ext")
 
     df_results = pd.merge(df_results, user_pers_df, on='userid', how="left")
     df_results["ext"] = np.where(df_results['ext_y'].isnull(), df_results['ext_x'], df_results['ext_y'])

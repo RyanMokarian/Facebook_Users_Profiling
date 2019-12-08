@@ -33,6 +33,8 @@ LinearRegression                           0.7883286209831646
 MultiTaskElasticNet                        0.7907966032516445
 MultiTaskLasso                             0.7914468413341056
  """
+import pickle
+
 import numpy as np
 import pandas as pd
 from sklearn import linear_model
@@ -53,9 +55,9 @@ def get_data(labels=['userid', 'ope', 'con', 'ext', 'agr', 'neu']):
     liwc_df = util.read_data_to_dataframe("../../data/Train/Text/liwc.csv")
     nrc_df.rename(columns={'userId': 'userid'}, inplace=True)
     liwc_df.rename(columns={'userId': 'userid'}, inplace=True)
-    image_df = read_image()
+    # image_df = read_image()
     merged_df = pd.merge(nrc_df, liwc_df, on='userid')
-    merged_df = pd.merge(merged_df, image_df, on='userid')
+    # merged_df = pd.merge(merged_df, image_df, on='userid')
     merged_df = pd.merge(merged_df, profile_df, on='userid')
     merged_df.drop(['userid'], axis=1, inplace=True)
     return merged_df
@@ -92,21 +94,64 @@ if __name__ == '__main__':
     ext:
     liwc,nrc,image (RidgeCV(np.logspace(-6, 6, 13)))  0.7830321701603294  ,alpha=10000
     ext:
-    liwc,nrc,image (LinearRegression)                 0.814635202620293  
+    liwc,nrc,image (LinearRegression) 0.814635202620293 
+    
+    LIWC,NRC,Oxford
+    features: 155 -> 0.814635202620293  
+    features: 130 -> 0.8087397987314924
+    features: 125 -> 0.8085390756716635
+    features: 120 -> 0.8078805476114155
+    features: 115 -> 0.8073645634639248
+    features: 110 -> 0.8067516725352682
+    features: 105 -> 0.8048987563914813
+    features: 100 -> 0.8048301171175467
+    features: 95 ->  0.8040794798891764
+    features: 90 ->  0.8035202503427753
+    features: 85 ->  0.8033920484019154
+    features: 80 ->  0.8030577984665397
+    features: 75 ->  0.8034457327751123
+    features: 70 ->  0.8031141682966849
+    features: 65 ->  0.7974201345172041
+    features: 60 ->  0.7971244349233088
+    features: 55 ->  0.7965164304726822   --> Optimal
+    features: 50 ->  0.7971586518984328
+    features: 45 ->  0.7981129289488578
+    features: 40 ->  0.7993186008941494
+    features: 35 ->  0.7994442452813353
+    features: 30 ->  0.7992797375055569
+    LIWC,NRC
+    Features all ->  0.8164961415169353
+    Features 85  ->  0.8146640397315885
+    Features 80  ->  0.8141830355189594
+    Features 70  ->  0.8124745867553116
+    Features 65  ->  0.8122500809256152
+    Features 60  ->  0.8120847991599838
+    Features 55  ->  0.8110788165170956
+    Features 50  ->  0.810790923965483
+    Features 45  ->  0.810723612710744  
+    Features 40  ->  0.8123779710073628
+    Features 35  ->  0.8045415164131541
+    Features 30  ->  0.8033034150815901  - > optimal
+    Features 25  ->  0.8039118530683798
+    Features 20  ->  0.8062832929120172
+    Features 15  ->  0.8056260158179702
     """
+    util = Utils()
+    df = get_data(labels=['userid', 'ext'])
+    df = df.filter(
+        ['positive', 'negative', 'anger_x', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust',
+         'pronoun', 'ppron', 'i', 'we', 'you', 'shehe', 'they', 'ipron', 'future', 'affect', 'posemo', 'negemo', 'anx',
+         'incl', 'work', 'death', 'assent', 'nonfl', 'Quote', 'Apostro', 'ext'], axis=1)
+    reg = linear_model.LinearRegression()
+    # df = util.apply_rfe(df, reg, 30, 1)
 
-    df = get_data(labels=['userid', 'neu'])
     X = df.iloc[:, 0:-1]  # independent columns
     X = np.log(X + 1)
     X = (X - X.min()) / (X.max() - X.min())
     X.fillna(0, inplace=True)
-    util = Utils()
 
     y = df[df.columns[-1:]]
-    util = Utils()
-    reg = linear_model.RidgeCV(np.logspace(-6, 6, 13))
 
-
-    # reg.fit(X, y)
-    util.perform_cross_validation(reg,df)
-    # pickle.dump(reg, open("../resources/LinearRegression_ext.sav", 'wb'))
+    reg.fit(X, y)
+    # util.perform_cross_validation(reg, df)
+    pickle.dump(reg, open("../resources/LinearRegression_ext_v2.sav", 'wb'))
