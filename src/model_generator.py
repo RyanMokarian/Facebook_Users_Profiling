@@ -1,16 +1,13 @@
 """
 This file contains scripts to generate different models
 """
-from sklearn.linear_model import LogisticRegression
-
-from src.classifiers.combined_classifier import CombinedClassifier
-from src.classifiers.image_classifier import ImageClassifier
-from src.preprocessors.nrc import Personality
+from classifiers.combined_classifier import CombinedClassifier
+from classifiers.image_classifier import ImageClassifier
+from classifiers.nrc import Personality
 
 
 def generate_models():
     # generate model for age prediction
-    clf = LogisticRegression(C=0.004832930238571752, penalty='l2')
     CC = CombinedClassifier()
     df = CC.merge_images_piwc()
     CC.predict_age_using_logistic_regression(df)

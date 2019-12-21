@@ -16,8 +16,8 @@ warnings.filterwarnings("ignore")
 class CombinedClassifier:
 
     @staticmethod
-    def read_liwc(profiles_path="../../data/Train/Profile/Profile.csv",
-                  liwc_path="../../data/Train/Text/liwc.csv"):
+    def read_liwc(profiles_path="../data/Train/Profile/Profile.csv",
+                  liwc_path="../data/Train/Text/liwc.csv"):
         util = Utils()
         profile_df = util.read_data_to_dataframe(profiles_path)
         liwc_df = util.read_data_to_dataframe(liwc_path)
@@ -35,8 +35,8 @@ class CombinedClassifier:
              'QMark', 'Exclam', 'Dash', 'Quote', 'Apostro', 'Parenth', 'OtherP', 'AllPct', 'age'], axis=1)
 
     @staticmethod
-    def read_image(profiles_path="../../data/Train/Profile/Profile.csv",
-                   image_path="../../data/Train/Image/oxford.csv", is_train=True):
+    def read_image(profiles_path="../data/Train/Profile/Profile.csv",
+                   image_path="../data/Train/Image/oxford.csv", is_train=True):
         util = Utils()
         profile_df = util.read_data_to_dataframe(profiles_path)
         profile_df.drop(profile_df.columns.difference(['userid', 'age']), 1, inplace=True)
@@ -64,9 +64,9 @@ class CombinedClassifier:
                                       right=False)
         return merged_df
 
-    def merge_images_piwc(self, is_train=True, profiles_path="../../data/Train/Profile/Profile.csv",
-                          liwc_path="../../data/Train/Text/liwc.csv",
-                          image_path="../../data/Train/Image/oxford.csv"):
+    def merge_images_piwc(self, is_train=True, profiles_path="../data/Train/Profile/Profile.csv",
+                          liwc_path="../data/Train/Text/liwc.csv",
+                          image_path="../data/Train/Image/oxford.csv"):
         df_liwc = self.read_liwc(profiles_path, liwc_path)
         if is_train:
             df_liwc.drop(['age'], axis=1, inplace=True)
@@ -121,7 +121,7 @@ class CombinedClassifier:
         clf = LogisticRegression(C=0.004832930238571752,
                                  penalty='l2')
         clf.fit(X, y)
-        pickle.dump(clf, open("../resources/LogisticRegressionAge_v2.sav", 'wb'))
+        pickle.dump(clf, open("resources/LogisticRegressionAge_v2.sav", 'wb'))
 
     def fit_model_using_default_ica_rfe(self, clf, df):
         # print("model with all features")

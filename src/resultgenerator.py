@@ -3,9 +3,9 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from src.classifiers.combined_classifier import CombinedClassifier
-from src.preprocessors.nrc import Personality
-from src.util import Utils
+from classifiers.combined_classifier import CombinedClassifier
+from classifiers.nrc import Personality
+from util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -201,12 +201,14 @@ def compute_neu(test_data_path, df_results):
     merged_df = pd.merge(merged_df, image_df, on='userid')
     merged_df = pd.merge(merged_df, profile_df, on='userid')
 
-    merged_df.drop(['userid', 'neu'], axis=1, inplace=True)
+    merged_df = merged_df.filter(
+        ['positive', 'negative', 'anger_x', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise',
+         'trust',
+         'pronoun', 'ppron', 'i', 'we', 'you', 'shehe', 'they', 'ipron', 'future', 'affect', 'posemo', 'negemo',
+         'anx',
+         'incl', 'work', 'death', 'assent', 'nonfl', 'Quote', 'Apostro', 'ext'], axis=1)
 
-    merged_df = np.log(merged_df + 1)
-    merged_df = (merged_df - merged_df.min()) / (merged_df.max() - merged_df.min())
-
-    merged_df.fillna(0, inplace=True)
+    merged_df = Personality.normalize(merged_df)
 
     model = Utils.read_pickle_from_file(model_path)
     predictions = model.predict(merged_df)
