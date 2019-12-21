@@ -3,9 +3,9 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from classifiers.combined_classifier import CombinedClassifier
-from preprocessors.nrc import read_image
-from util import Utils
+from src.classifiers.combined_classifier import CombinedClassifier
+from src.preprocessors.nrc import Personality
+from src.util import Utils
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -189,7 +189,8 @@ def compute_neu(test_data_path, df_results):
     profile_df.drop(profile_df.columns.difference(['userid', 'neu']), 1, inplace=True)
     nrc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/nrc.csv")
     liwc_df = Utils.read_data_to_dataframe(test_data_path + "/Text/liwc.csv")
-    image_df = read_image(profiles_path=test_data_path + "/Profile/Profile.csv",
+    personality = Personality()
+    image_df = personality.read_image(profiles_path=test_data_path + "/Profile/Profile.csv",
                           image_path=test_data_path + "/Image/oxford.csv")
 
     nrc_df.rename(columns={'userId': 'userid'}, inplace=True)

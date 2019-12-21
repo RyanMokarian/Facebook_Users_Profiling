@@ -100,7 +100,7 @@ class ImageClassifier:
         print("SVM acc: ", accuracy_score(y_test, y_pred))
 
     @staticmethod
-    def random_forest_classifier(df_gender):
+    def generate_model_using_random_forest_classifier(df_gender):
         X_train = df_gender.iloc[:, :-1]
         y_train = df_gender.iloc[:, -1]
         clf = RandomForestClassifier(bootstrap=False, n_estimators=400, max_depth=10, max_features='sqrt')
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     # IMAGE_CLASSIFIER.knn_classify(df_gender)
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
     # IMAGE_CLASSIFIER.svm_estimation(df_gender)
-    IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
+    IMAGE_CLASSIFIER.generate_model_using_random_forest_classifier(df_gender)
     df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
     # IMAGE_CLASSIFIER.sgd_classify(df_age_group)
     # IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
