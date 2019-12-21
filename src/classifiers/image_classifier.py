@@ -7,7 +7,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
-from src.util import Utils
+from util import Utils
 import pandas as pd
 from sklearn.metrics import accuracy_score, hinge_loss
 import numpy as np
@@ -17,9 +17,9 @@ class ImageClassifier:
     @staticmethod
     def get_image_gender_training_data():
         util = Utils()
-        profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
+        profile_df = util.read_data_to_dataframe("../data/Train/Profile/Profile.csv")
         profile_df.drop(profile_df.columns.difference(['userid', 'gender']), 1, inplace=True)
-        image_df = util.read_data_to_dataframe("../../data/Train/Image/oxford.csv")
+        image_df = util.read_data_to_dataframe("../data/Train/Image/oxford.csv")
         image_df.rename(columns={'userId': 'userid'}, inplace=True)
         merged_df = pd.merge(image_df, profile_df, on='userid')
         return merged_df.filter(
@@ -41,9 +41,9 @@ class ImageClassifier:
     @staticmethod
     def get_image_age_training_data():
         util = Utils()
-        profile_df = util.read_data_to_dataframe("../../data/Train/Profile/Profile.csv")
+        profile_df = util.read_data_to_dataframe("../data/Train/Profile/Profile.csv")
         profile_df.drop(profile_df.columns.difference(['userid', 'age']), 1, inplace=True)
-        image_df = util.read_data_to_dataframe("../../data/Train/Image/oxford.csv")
+        image_df = util.read_data_to_dataframe("../data/Train/Image/oxford.csv")
         image_df.rename(columns={'userId': 'userid'}, inplace=True)
         merged_df = pd.merge(image_df, profile_df, on='userid')
         merged_df =  merged_df.filter(
@@ -78,7 +78,7 @@ class ImageClassifier:
         X_train, X_test, y_train, y_test = Utils.split_data(df_gender)
         neigh = KNeighborsClassifier(n_neighbors=18)
         neigh.fit(X_train, y_train)
-        pickle.dump(neigh, open("../resources/KNNimages_" + predicted_variable + ".sav", 'wb'))
+        pickle.dump(neigh, open("resources/KNNimages_" + predicted_variable + ".sav", 'wb'))
         y_pred = neigh.predict(X_test)
         print("KNN acc: ", accuracy_score(y_test, y_pred))
 
@@ -100,12 +100,12 @@ class ImageClassifier:
         print("SVM acc: ", accuracy_score(y_test, y_pred))
 
     @staticmethod
-    def random_forest_classifier(df_gender):
+    def generate_model_using_random_forest_classifier(df_gender):
         X_train = df_gender.iloc[:, :-1]
         y_train = df_gender.iloc[:, -1]
         clf = RandomForestClassifier(bootstrap=False, n_estimators=400, max_depth=10, max_features='sqrt')
         clf.fit(X_train, y_train)
-        pickle.dump(clf, open("../resources/RandomForest_Gender.sav", 'wb'))
+        pickle.dump(clf, open("resources/RandomForest_Gender.sav", 'wb'))
 
     @staticmethod
     def random_forest_classifier_kfold_validation(df_gender):
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     # IMAGE_CLASSIFIER.knn_classify(df_gender)
     # IMAGE_CLASSIFIER.kernel_estimation(df_gender)
     # IMAGE_CLASSIFIER.svm_estimation(df_gender)
-    IMAGE_CLASSIFIER.random_forest_classifier(df_gender)
+    IMAGE_CLASSIFIER.generate_model_using_random_forest_classifier(df_gender)
     df_age_group = IMAGE_CLASSIFIER.get_image_age_training_data()
     # IMAGE_CLASSIFIER.sgd_classify(df_age_group)
     # IMAGE_CLASSIFIER.knn_classify(df_age_group, "age-group")
