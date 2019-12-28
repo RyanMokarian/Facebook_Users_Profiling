@@ -1,3 +1,16 @@
+'''
+****************************************************************
+*	Title: "Facebook Users Profiling "
+
+*	Category: Machine Learning
+
+*	Authors: Ryan Mokarian, Maysam Mokarian, Maziar M-Shahi
+****************************************************************
+	Description:
+	Facebook users’ various characteristics (age group, gender and personality traits) are predicted. Users’ posts (LIWC, NRC), page likes and images (Oxford) are utilized multimodal datasets. For Gender prediction, Random forest used. For Age group prediction, Logistic Regression used and for Personality traits prediction, Linear Regression and Ridge CV used. 
+'''
+
+
 - [Overview](#overview) 
 - [Set up your environment](#env)
 - [Architecture](#architect)
